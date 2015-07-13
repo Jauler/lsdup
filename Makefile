@@ -27,8 +27,8 @@ build/%.o: %.c
 	gcc $(CFLAGS) -c -o $@ $<
 
 post-build:
-	@echo "====== Build Succeded ======"
 	size -A $(BIN_NAME)
+	@echo "====== Build Succeded ======\n\r"
 
 
 clean:

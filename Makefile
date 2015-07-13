@@ -2,8 +2,8 @@
 BIN_NAME = jauler-lsdup
 
 #Compiler flags
-CFLAGS = 
-LFLAGS = 
+CFLAGS = -Werror -pedantic -Wall -std=c99
+LFLAGS = $(CFLAGS)
 
 #List files for dependencies specification
 BUILD_DIR = build

@@ -12,6 +12,9 @@ These packages are required in order to succesfully compile utility:
 	* glibc
 	* pthread
 
+Also GCC needs to support these features:
+	* __sync_bool_compare_and_swap
+
 
 Build
 ======================================

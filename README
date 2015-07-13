@@ -1,0 +1,30 @@
+jauler-lsdup
+======================================
+
+A little utility to list duplicate files in a given
+folder on a unix or posix system
+
+
+Dependencies and requirements
+======================================
+
+These packages are required in order to succesfully compile utility:
+	* glibc
+	* pthread
+
+
+Build
+======================================
+
+Assuming, that all dependencies are satified
+
+To build a binary:
+$ make
+
+To run tests:
+$ make test
+
+To cleanup
+$ make clean
+
+

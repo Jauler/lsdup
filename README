@@ -24,9 +24,6 @@ Assuming, that all dependencies are satified
 To build a binary:
 $ make
 
-To run tests:
-$ make test
-
 To cleanup:
 $ make clean
 

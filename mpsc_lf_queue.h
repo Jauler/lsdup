@@ -11,16 +11,39 @@
 #ifndef MPSC_LF_QUEUE_H
 #define MPSC_LF_QUEUE_H
 
+#include <stdint.h>
+
 struct mpscq_elem;
+
+//Define pointer with tag structure for ABA-problem solution
+#if __x86_64__
+union ptr_with_tag {
+	unsigned __int128 blk;
+	struct ptr_with_cnt_s {
+		struct mpscq_elem *ptr;
+		uint64_t cnt;
+	} ptr_cnt;
+
+};
+#else
+union ptr_with_tag {
+	uint64_t blk;
+	struct ptr_with_cnt_s {
+		struct mpscq_elem *ptr;
+		uint32_t cnt;
+	} ptr_cnt;
+};
+#endif
+
 
 struct mpscq_elem{
 	void *data;
-	struct mpscq_elem *next;
+	union ptr_with_tag next;
 };
 
 struct mpscq {
-	struct mpscq_elem *head;
-	struct mpscq_elem *tail;
+	union ptr_with_tag head;
+	union ptr_with_tag tail;
 };
 
 

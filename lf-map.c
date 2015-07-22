@@ -370,7 +370,7 @@ int map_rm(struct map *m, uint64_t key)
 	return 0;
 }
 
-
+#ifdef __x86_64__
 void map_print(struct map *m)
 {
 	int i, j;
@@ -418,5 +418,53 @@ void map_print(struct map *m)
 
 	return;
 }
+#else
+void map_print(struct map *m)
+{
+	int i, j;
+	struct node *cur;
 
+	printf("Map:\n");
+	printf("  size: %d\n", m->size);
+	printf("  count: %d\n", m->count);
+
+	printf("Linked list:\n");
+	cur = m->ST[0][0].ptr_mrk.ptr;
+	while(1){
+		//Check if we have reached end of list
+		if(cur == NULL){
+			printf("NULL\n");
+			break;
+		}
+
+		//Print key
+		printf("[%llx]->", cur->key);
+
+		//Do not overrun lines
+		i++;
+		if(i % 5 == 0)
+			printf("\n");
+
+		//go to next item
+		cur = cur->next.ptr_mrk.ptr;
+	}
+
+	//Print buckets
+	printf("Buckets:\n");
+	for(i = 0; i < LF_MAP_SEGMENT_SIZE; i++){
+		printf("[%i %p]\n", i, m->ST[i]);
+
+		if(m->ST[i] == NULL)
+			continue;
+
+		for(j = 0; j < LF_MAP_SEGMENT_SIZE; j++)
+			if(m->ST[i][j].ptr_mrk.ptr != NULL)
+				printf("    {%d %llx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
+			else
+				printf("    {%d nil}\n", j);
+	}
+
+	return;
+}
+#endif
 

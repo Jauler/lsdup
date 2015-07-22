@@ -95,8 +95,10 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 		//Buildup sample unmarked pointer types for comparisons
 		cur_0.ptr_mrk.ptr = s->cur.ptr_mrk.ptr;
 		cur_0.ptr_mrk.mrk = 0;
+		cur_0.ptr_mrk.tag = s->cur.ptr_mrk.tag;
 		next_0.ptr_mrk.ptr = s->next.ptr_mrk.ptr;
 		next_0.ptr_mrk.mrk = 0;
+		next_0.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
 
 		//Check if insertion did not happen
 		if(s->prev->blk != cur_0.blk)
@@ -108,10 +110,12 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 				return cur_key == key;
 			s->prev = &s->cur.ptr_mrk.ptr->next;
 		} else {
-			if(CAS(&s->prev->blk, &cur_0.blk, &next_0.blk))
+			if(CAS(&s->prev->blk, &cur_0.blk, &next_0.blk)){
 				free(cur_0.ptr_mrk.ptr);
-			else
+				s->next.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
+			} else {
 				goto TRY_AGAIN;
+			}
 		}
 		s->cur = s->next;
 	}
@@ -141,12 +145,13 @@ int l_insert_with_findres(struct node *h, uint64_t key, void *data,
 		}
 
 		//Set new element next pointer
+		n->next.blk = 0;
 		n->next.ptr_mrk.ptr = s->cur.ptr_mrk.ptr;
-		n->next.ptr_mrk.mrk = 0;
 
 		//Buildup marked pointer to new element
 		node_ptr.ptr_mrk.ptr = n;
 		node_ptr.ptr_mrk.mrk = 0;
+		node_ptr.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
 
 		//Try to insert into list
 		if(CAS(&s->prev->blk, &s->cur.blk, &node_ptr.blk)){
@@ -178,16 +183,20 @@ int l_delete(struct node *h, uint64_t key)
 		// Try to mark node as deleted
 		tmp[0].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
 		tmp[0].ptr_mrk.mrk = 0;
+		tmp[0].ptr_mrk.tag = s.next.ptr_mrk.tag;
 		tmp[1].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
 		tmp[1].ptr_mrk.mrk = 1;
+		tmp[1].ptr_mrk.tag = s.next.ptr_mrk.tag + 1;
 		if(!CAS(&s.cur.ptr_mrk.ptr->next.blk, &tmp[0].blk, &tmp[1].blk))
 			continue;
 
 		// Change links of linked list to skip our to-be-deleted node
 		tmp[0].ptr_mrk.ptr = s.cur.ptr_mrk.ptr;
 		tmp[0].ptr_mrk.mrk = 0;
+		tmp[0].ptr_mrk.tag = s.cur.ptr_mrk.tag;
 		tmp[1].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
 		tmp[1].ptr_mrk.mrk = 0;
+		tmp[1].ptr_mrk.tag = s.cur.ptr_mrk.tag + 1;
 		if(CAS(&s.prev->blk, &tmp[0].blk, &tmp[1].blk))
 			free(s.cur.ptr_mrk.ptr);
 		else

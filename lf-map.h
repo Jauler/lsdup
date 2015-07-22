@@ -17,7 +17,6 @@
 
 //TODO list:
 //		*second indirection max number of buckets
-//		*tagging of pointers for ABA problem
 //		*multiple values support(?)(here or higher levels?)
 
 
@@ -29,7 +28,8 @@ union marked_ptr {
 	unsigned __int128 blk;
 	struct ptr_with_mrk_s {
 		struct node *ptr;
-		uint64_t mrk;
+		uint32_t mrk;
+		uint32_t tag;
 	} ptr_mrk;
 };
 #else
@@ -37,7 +37,8 @@ union marked_ptr {
 	uint64_t blk;
 	struct ptr_with_mrk_s {
 		struct node *ptr;
-		uint32_t mrk;
+		uint16_t mrk;
+		uint16_t tag;
 	} ptr_mrk;
 };
 #endif

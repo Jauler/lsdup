@@ -13,6 +13,14 @@
 
 #include <stdint.h>
 
+#define LF_MAP_SEGMENT_SIZE		512
+
+//TODO list:
+//		*second indirection max number of buckets
+//		*tagging of pointers for ABA problem
+//		*multiple values support(?)(here or higher levels?)
+
+
 struct node;
 
 //Define pointer with marker suitable for use in double-word-CAS
@@ -43,10 +51,20 @@ struct node {
 
 
 struct map {
-	union marked_ptr *T[512];
+	union marked_ptr *ST[LF_MAP_SEGMENT_SIZE];
 	unsigned int count;
 	unsigned int size;
 };
+
+
+/*
+ * Create new map instance
+ *
+ * Return:
+ * 		NULL                    - on error
+ * 		pointer to struct map * - on success
+ */
+struct map *map_create(void);
 
 
 /*
@@ -87,6 +105,9 @@ void *map_find(struct map *m, uint64_t key);
  */
 int map_rm(struct map *m, uint64_t key);
 
+
+//DEBUG tools
+void map_print(struct map *m);
 
 #endif
 

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "errno.h"
 #include "lf-map.h"
@@ -36,17 +37,23 @@ static const uint8_t bitReverse256[] =
 };
 
 #define REVERSE(x)		( \
-						(uint64_t)bitReverse256[(x >>  0) & 0xFF] << 56 | \
-						(uint64_t)bitReverse256[(x >>  8) & 0xFF] << 48 | \
-						(uint64_t)bitReverse256[(x >> 16) & 0xFF] << 40 | \
-						(uint64_t)bitReverse256[(x >> 24) & 0xFF] << 32 | \
-						(uint64_t)bitReverse256[(x >> 32) & 0xFF] << 24 | \
-						(uint64_t)bitReverse256[(x >> 40) & 0xFF] << 16 | \
-						(uint64_t)bitReverse256[(x >> 48) & 0xFF] <<  8 | \
-						(uint64_t)bitReverse256[(x >> 56) & 0xFF] <<  0 \
+						(uint64_t)bitReverse256[((x) >>  0) & 0xFF] << 56 | \
+						(uint64_t)bitReverse256[((x) >>  8) & 0xFF] << 48 | \
+						(uint64_t)bitReverse256[((x) >> 16) & 0xFF] << 40 | \
+						(uint64_t)bitReverse256[((x) >> 24) & 0xFF] << 32 | \
+						(uint64_t)bitReverse256[((x) >> 32) & 0xFF] << 24 | \
+						(uint64_t)bitReverse256[((x) >> 40) & 0xFF] << 16 | \
+						(uint64_t)bitReverse256[((x) >> 48) & 0xFF] <<  8 | \
+						(uint64_t)bitReverse256[((x) >> 56) & 0xFF] <<  0 \
 						)
-#define REG_KEY(x)		(REVERSE(x | 0x8000000000000000ULL))
+#define REG_KEY(x)		(REVERSE((x) | 0x8000000000000000ULL))
 #define DUM_KEY(x)		(REVERSE(x))
+
+#ifdef __x86_64__
+#define GET_PARENT(x)	(x & ~(1 << (63 - __builtin_clz(x))))
+#else
+#define GET_PARENT(x)	(x & ~(1 << (31 - __builtin_clz(x))))
+#endif
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
 														expected, \
@@ -112,7 +119,8 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 	return 0;
 }
 
-int l_insert(struct node *h, uint64_t key, void *data)
+int l_insert_with_findres(struct node *h, uint64_t key, void *data,
+						struct srch_status *s, struct node **new)
 {
 	//Allocate node struct
 	struct node *n = malloc(sizeof(*n));
@@ -124,15 +132,16 @@ int l_insert(struct node *h, uint64_t key, void *data)
 	n->data = data;
 	n->next.blk = 0;
 
-	struct srch_status s;
 	union marked_ptr node_ptr;
 	while(1){
 		//Search for a place to insert our element
-		if(l_isInList(h, key, &s))
+		if(l_isInList(h, key, s)){
+			free(n);
 			return -EEXIST;//TODO: add support for multiple values
+		}
 
 		//Set new element next pointer
-		n->next.ptr_mrk.ptr = s.cur.ptr_mrk.ptr;
+		n->next.ptr_mrk.ptr = s->cur.ptr_mrk.ptr;
 		n->next.ptr_mrk.mrk = 0;
 
 		//Buildup marked pointer to new element
@@ -140,12 +149,21 @@ int l_insert(struct node *h, uint64_t key, void *data)
 		node_ptr.ptr_mrk.mrk = 0;
 
 		//Try to insert into list
-		if(CAS(&s.prev->blk, &s.cur.blk, &node_ptr.blk))
+		if(CAS(&s->prev->blk, &s->cur.blk, &node_ptr.blk)){
+			if(new != NULL)
+				*new = n;
 			return 0;
+		}
 	}
 
 	return 0;
 }
+int l_insert(struct node *h, uint64_t key, void *data)
+{
+	struct srch_status s;
+	return l_insert_with_findres(h, key, data, &s, NULL);
+}
+
 
 int l_delete(struct node *h, uint64_t key)
 {
@@ -181,23 +199,93 @@ int l_delete(struct node *h, uint64_t key)
 	return 0;
 }
 
-struct node *get_bucket(struct map *m, unsigned int bucket_id)
+struct node *get_bucket(struct map *m, uint64_t bucket_id)
 {
-	//TODO: implement
-	return NULL;
+	uint64_t segment = bucket_id / LF_MAP_SEGMENT_SIZE;
+	if(m->ST[segment] == NULL)
+		return NULL;
+
+	return m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr;
 }
 
-int set_bucket(struct map *m, unsigned int bucket_id, struct node *n)
+int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 {
-	//TODO: implement
+	uint64_t segment = bucket_id / LF_MAP_SEGMENT_SIZE;
+	struct node *new_segment;
+	struct node *null = NULL;
+	if(m->ST[segment] == NULL){
+
+		//Allocate new segment
+		new_segment = calloc(1, sizeof(union marked_ptr) * LF_MAP_SEGMENT_SIZE);
+		if(new_segment == NULL)
+			return -EINVAL;
+
+		// Try to set new segment address
+		if(!CAS(&m->ST[segment], &null, &new_segment))
+			free(new_segment);
+	}
+
+	// Save head node
+	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr = n;
+	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.mrk = 0;
+
 	return -EINVAL;
 }
 
-struct node *init_bucket(struct map *m, unsigned int bucket_id)
+struct node *init_bucket(struct map *m, uint64_t bucket_id)
 {
-	//TODO: implement
-	return NULL;
+	//Make sure all parents are also inited
+	uint64_t parent = GET_PARENT(bucket_id);
+	if(get_bucket(m, parent) == NULL){
+		init_bucket(m, parent);
+	}
+
+	struct srch_status s;
+	struct node *new = NULL;
+	if(l_insert_with_findres(get_bucket(m, parent),
+					DUM_KEY(bucket_id), NULL, &s, &new) < 0){
+		new = s.cur.ptr_mrk.ptr;
+	}
+
+	//set pointer
+	set_bucket(m, bucket_id, new);
+
+	return new;
 }
+
+
+struct map *map_create(void)
+{
+	//allocate memory for a map
+	struct map *m = malloc(sizeof(*m));
+	if(m == NULL)
+		return NULL;
+
+	//Initiate counters
+	m->count = 0;
+	m->size = 2;
+
+	//Reset all places in segment table
+	memset(m->ST, 0, sizeof(m->ST));
+
+	//Create dummy node for zero bucket
+	struct node *n = malloc(sizeof(*n));
+	if(n == NULL){
+		free(m);
+		return NULL;
+	}
+
+	//Fill in data
+	n->data = NULL;
+	n->key = 0;
+	n->next.blk = 0;
+
+	//Save dummy node to bucket
+	set_bucket(m, 0, n);
+
+	return m;
+}
+
 
 int map_add(struct map *m, uint64_t key, void *data)
 {
@@ -219,7 +307,7 @@ int map_add(struct map *m, uint64_t key, void *data)
 	//Take care of hash size
 	int curr_size = m->size;
 	int d_size = curr_size * 2;
-	if(curr_size / __atomic_add_fetch(&m->count, 1, __ATOMIC_SEQ_CST) > 2)
+	if(curr_size / __atomic_add_fetch(&m->count, 1, __ATOMIC_SEQ_CST) < 2)
 		CAS(&m->size, &curr_size, &d_size);
 
 	return 0;
@@ -267,6 +355,55 @@ int map_rm(struct map *m, uint64_t key)
 	//decrement element counter
 	__atomic_sub_fetch(&m->count, 1, __ATOMIC_SEQ_CST);
 	return 0;
+}
+
+
+void map_print(struct map *m)
+{
+	int i, j;
+	struct node *cur;
+
+	printf("Map:\n");
+	printf("  size: %d\n", m->size);
+	printf("  count: %d\n", m->count);
+
+	printf("Linked list:\n");
+	cur = m->ST[0][0].ptr_mrk.ptr;
+	while(1){
+		//Check if we have reached end of list
+		if(cur == NULL){
+			printf("NULL\n");
+			break;
+		}
+
+		//Print key
+		printf("[%lx]->", cur->key);
+
+		//Do not overrun lines
+		i++;
+		if(i % 5 == 0)
+			printf("\n");
+
+		//go to next item
+		cur = cur->next.ptr_mrk.ptr;
+	}
+
+	//Print buckets
+	printf("Buckets:\n");
+	for(i = 0; i < LF_MAP_SEGMENT_SIZE; i++){
+		printf("[%i %p]\n", i, m->ST[i]);
+
+		if(m->ST[i] == NULL)
+			continue;
+
+		for(j = 0; j < LF_MAP_SEGMENT_SIZE; j++)
+			if(m->ST[i][j].ptr_mrk.ptr != NULL)
+				printf("    {%d %lx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
+			else
+				printf("    {%d nil}\n", j);
+	}
+
+	return;
 }
 
 

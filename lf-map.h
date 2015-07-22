@@ -17,7 +17,6 @@
 
 //TODO list:
 //		*second indirection max number of buckets
-//		*multiple values support(?)(here or higher levels?)
 
 
 struct node;

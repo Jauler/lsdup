@@ -50,9 +50,9 @@ static const uint8_t bitReverse256[] =
 #define DUM_KEY(x)		(REVERSE(x))
 
 #ifdef __x86_64__
-#define GET_PARENT(x)	(x & ~(1 << (63 - __builtin_clz(x))))
+#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clz(x))))
 #else
-#define GET_PARENT(x)	(x & ~(1 << (31 - __builtin_clz(x))))
+#define GET_PARENT(x)	((x) & ~(1 << (31 - __builtin_clz(x))))
 #endif
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
@@ -122,6 +122,7 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 
 	return 0;
 }
+
 
 int l_insert_with_findres(struct node *h, uint64_t key, void *data,
 						struct srch_status *s, struct node **new)
@@ -208,6 +209,7 @@ int l_delete(struct node *h, uint64_t key)
 	return 0;
 }
 
+
 struct node *get_bucket(struct map *m, uint64_t bucket_id)
 {
 	uint64_t segment = bucket_id / LF_MAP_SEGMENT_SIZE;
@@ -216,6 +218,7 @@ struct node *get_bucket(struct map *m, uint64_t bucket_id)
 
 	return m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr;
 }
+
 
 int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 {
@@ -240,6 +243,7 @@ int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 
 	return -EINVAL;
 }
+
 
 struct node *init_bucket(struct map *m, uint64_t bucket_id)
 {

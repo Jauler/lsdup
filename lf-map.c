@@ -49,11 +49,18 @@ static const uint8_t bitReverse256[] =
 #define REG_KEY(x)		(REVERSE((x) | 0x8000000000000000ULL))
 #define DUM_KEY(x)		(REVERSE(x))
 
-#ifdef __x84_64__
-#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clzl(x))))
+#ifdef __x86_64__
+#define MSB_SET(x)				(63 - __builtin_clzl(x))
 #else
-#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clzll(x))))
+#define MSB_SET(x)				(63 - __builtin_clzll(x))
 #endif
+
+#define GET_PARENT(x)			((x) & ~(1 << MSB_SET(x)))
+
+#define GET_SEGMENT(x)			((x) == 0 ? 0 : MSB_SET(x))
+#define GET_SEGMENT_SIZE(x)		((x) == 0 ? 2 : 1 << (x))
+#define GET_SEGMENT_OFF(x)		(GET_SEGMENT(x) == 0 ? (x) & 0x01 : \
+											(x) & ~(1 << GET_SEGMENT(x)))
 
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
@@ -213,23 +220,25 @@ int l_delete(struct node *h, uint64_t key)
 
 struct node *get_bucket(struct map *m, uint64_t bucket_id)
 {
-	uint64_t segment = bucket_id / LF_MAP_SEGMENT_SIZE;
+	uint64_t segment = GET_SEGMENT(bucket_id);
 	if(m->ST[segment] == NULL)
 		return NULL;
 
-	return m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr;
+	uint64_t segment_off = GET_SEGMENT_OFF(bucket_id);
+	return m->ST[segment][segment_off].ptr_mrk.ptr;
 }
 
 
 int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 {
-	uint64_t segment = bucket_id / LF_MAP_SEGMENT_SIZE;
+	uint64_t segment = GET_SEGMENT(bucket_id);
 	struct node *new_segment;
 	struct node *null = NULL;
 	if(m->ST[segment] == NULL){
 
 		//Allocate new segment
-		new_segment = calloc(1, sizeof(union marked_ptr) * LF_MAP_SEGMENT_SIZE);
+		uint64_t new_cnt = GET_SEGMENT_SIZE(segment);
+		new_segment = calloc(new_cnt, sizeof(union marked_ptr));
 		if(new_segment == NULL)
 			return -EINVAL;
 
@@ -239,8 +248,9 @@ int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 	}
 
 	// Save head node
-	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr = n;
-	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.mrk = 0;
+	uint64_t segment_off = GET_SEGMENT_OFF(bucket_id);
+	m->ST[segment][segment_off].ptr_mrk.ptr = n;
+	m->ST[segment][segment_off].ptr_mrk.mrk = 0;
 
 	return 0;
 }
@@ -410,7 +420,7 @@ void map_print(struct map *m)
 		if(m->ST[i] == NULL)
 			continue;
 
-		for(j = 0; j < LF_MAP_SEGMENT_SIZE; j++)
+		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
 			if(m->ST[i][j].ptr_mrk.ptr != NULL)
 				printf("    {%d %lx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
 			else
@@ -458,7 +468,7 @@ void map_print(struct map *m)
 		if(m->ST[i] == NULL)
 			continue;
 
-		for(j = 0; j < LF_MAP_SEGMENT_SIZE; j++)
+		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
 			if(m->ST[i][j].ptr_mrk.ptr != NULL)
 				printf("    {%d %llx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
 			else

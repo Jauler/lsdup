@@ -13,10 +13,7 @@
 
 #include <stdint.h>
 
-#define LF_MAP_SEGMENT_SIZE		512
-
-//TODO list:
-//		*second indirection max number of buckets
+#define LF_MAP_SEGMENT_SIZE		64
 
 
 struct node;

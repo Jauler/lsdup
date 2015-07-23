@@ -21,14 +21,14 @@
 														__ATOMIC_SEQ_CST, \
 														__ATOMIC_SEQ_CST)
 
-struct mpscq *MPSCQ_create(void)
+struct mpmcq *MPMCQ_create(void)
 {
 	//Allocate structures
-	struct mpscq_elem *node = malloc(sizeof(*node));
+	struct mpmcq_elem *node = malloc(sizeof(*node));
 	if(node == NULL)
 		return NULL;
 
-	struct mpscq *q = malloc(sizeof(*q));
+	struct mpmcq *q = malloc(sizeof(*q));
 	if(q == NULL){
 		free(node);
 		return NULL;
@@ -48,10 +48,10 @@ struct mpscq *MPSCQ_create(void)
 }
 
 
-void MPSCQ_destroy(struct mpscq *q)
+void MPMCQ_destroy(struct mpmcq *q)
 {
 	//Free all elements from queue
-	while(MPSCQ_dequeue(q) != NULL);
+	while(MPMCQ_dequeue(q) != NULL);
 
 	//Free dummy element
 	free(q->head.ptr_cnt.ptr);
@@ -63,7 +63,7 @@ void MPSCQ_destroy(struct mpscq *q)
 }
 
 
-int MPSCQ_enqueue(struct mpscq *q, void *elem)
+int MPMCQ_enqueue(struct mpmcq *q, void *elem)
 {
 	union ptr_with_tag tmp;
 
@@ -72,7 +72,7 @@ int MPSCQ_enqueue(struct mpscq *q, void *elem)
 		return -EINVAL;
 
 	//Allocate node
-	struct mpscq_elem *node = malloc(sizeof(*node));
+	struct mpmcq_elem *node = malloc(sizeof(*node));
 	if(node == NULL)
 		return -ENOMEM;
 
@@ -111,7 +111,7 @@ int MPSCQ_enqueue(struct mpscq *q, void *elem)
 	return 0;
 }
 
-void *MPSCQ_dequeue(struct mpscq *q)
+void *MPMCQ_dequeue(struct mpmcq *q)
 {
 	void *data = NULL;
 	union ptr_with_tag head, tail, next, tmp;

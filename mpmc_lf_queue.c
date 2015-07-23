@@ -78,7 +78,7 @@ int MPMCQ_enqueue(struct mpmcq *q, void *elem)
 
 	//Initiate elements
 	node->data = elem;
-	node->next.ptr_cnt.ptr = NULL;
+	node->next.blk = 0;
 
 	//Try to insert nodes until it has happened
 	union ptr_with_tag tail, next;
@@ -136,7 +136,7 @@ void *MPMCQ_dequeue(struct mpmcq *q)
 			data = next.ptr_cnt.ptr->data;
 			tmp.ptr_cnt.ptr = next.ptr_cnt.ptr;
 			tmp.ptr_cnt.cnt = head.ptr_cnt.cnt + 1;
-			if(CAS(&q->head.blk, &head.blk, &tmp.blk));
+			if(CAS(&q->head.blk, &head.blk, &tmp.blk))
 				break;
 		}
 	}

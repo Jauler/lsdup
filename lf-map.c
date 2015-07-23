@@ -241,7 +241,7 @@ int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.ptr = n;
 	m->ST[segment][bucket_id % LF_MAP_SEGMENT_SIZE].ptr_mrk.mrk = 0;
 
-	return -EINVAL;
+	return 0;
 }
 
 

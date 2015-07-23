@@ -49,11 +49,12 @@ static const uint8_t bitReverse256[] =
 #define REG_KEY(x)		(REVERSE((x) | 0x8000000000000000ULL))
 #define DUM_KEY(x)		(REVERSE(x))
 
-#ifdef __x86_64__
-#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clz(x))))
+#ifdef __x84_64__
+#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clzl(x))))
 #else
-#define GET_PARENT(x)	((x) & ~(1 << (31 - __builtin_clz(x))))
+#define GET_PARENT(x)	((x) & ~(1 << (63 - __builtin_clzll(x))))
 #endif
+
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
 														expected, \

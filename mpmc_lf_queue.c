@@ -1,5 +1,5 @@
 /*
- * Implementation of at least Multiple Producer Single Consumer Lock Free queue
+ * Implementation of Multiple Producer Multiple Consumer Lock Free queue
  * Reference: http://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf
  *
  * Author: Rytis Karpuška
@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #include "errno.h"
-#include "mpsc_lf_queue.h"
+#include "mpmc_lf_queue.h"
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
 														expected, \

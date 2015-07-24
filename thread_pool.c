@@ -48,6 +48,9 @@ static void *thread_worker(void *arg)
 		//Execute task
 		t->task(t->arg);
 		free(t);
+
+		//Decrement task count
+		__atomic_sub_fetch(&tp->num_enqueued_tasks, 1, __ATOMIC_SEQ_CST);
 	}
 
 	return NULL;
@@ -87,6 +90,7 @@ struct thread_pool *tp_create(unsigned int num_threads)
 
 int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg)
 {
+	int status;
 	struct task *t = malloc(sizeof(*t));
 	if(t == NULL)
 		return -ENOMEM;
@@ -95,7 +99,14 @@ int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg)
 	t->task = task;
 	t->arg = arg;
 
-	return MPMCQ_enqueue(tp->wq, t);
+	//Enqueue task
+	status = MPMCQ_enqueue(tp->wq, t);
+
+	//increment enqueued task count
+	if(status == 0)
+		__atomic_add_fetch(&tp->num_enqueued_tasks, 1, __ATOMIC_SEQ_CST);
+
+	return status;
 }
 
 

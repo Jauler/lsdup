@@ -8,7 +8,7 @@
 
 
 #ifndef __THREAD_POOL_H
-#define __TRHEAD_POOL_H
+#define __THREAD_POOL_H
 
 #include <pthread.h>
 #include "mpmc_lf_queue.h"
@@ -18,6 +18,7 @@ struct thread_pool {
 	struct mpmcq *wq;
 	int num_threads;
 	int num_waiting_threads;
+	int num_enqueued_tasks;
 };
 
 

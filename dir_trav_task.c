@@ -79,6 +79,10 @@ void dtt_worker(void *_arg)
 	int status;
 
 	arg->dir = opendir(arg->path);
+	if(arg->dir == NULL){
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		return;
+	}
 
 	while(1){
 		//Read entry

@@ -81,7 +81,7 @@ void dtt_worker(void *_arg)
 
 	arg->dir = opendir(arg->path);
 	if(arg->dir == NULL){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(errno));
 		return;
 	}
 
@@ -102,7 +102,7 @@ void dtt_worker(void *_arg)
 	}
 
 	if(status != 0)
-		printf("Error reading directory\n");
+		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(status));
 
 	closedir(arg->dir);
 	free(arg);

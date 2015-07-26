@@ -62,7 +62,8 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 		n_arg->m = arg->m;
 		n_arg->dir = NULL;
 		strcpy(n_arg->path, arg->path);
-		strcat(n_arg->path, "/");
+		if(arg->path[strlen(arg->path) - 1] != '/')
+			strcat(n_arg->path, "/");
 		strcat(n_arg->path, d->d_name);
 	}
 

@@ -46,26 +46,22 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 {
 	struct dtt_arg *n_arg;
 
-	if(d == NULL){
-		n_arg = arg;
-	} else {
-		if(strcmp(".", d->d_name) == 0)
-			return;
-		if(strcmp("..", d->d_name) == 0)
-			return;
+	if(strcmp(".", d->d_name) == 0)
+		return;
+	if(strcmp("..", d->d_name) == 0)
+		return;
 
-		n_arg = malloc(sizeof(*n_arg) + strlen(arg->path) + strlen(d->d_name) + 2);
-		if(n_arg == NULL)
-			return;
+	n_arg = malloc(sizeof(*n_arg) + strlen(arg->path) + strlen(d->d_name) + 2);
+	if(n_arg == NULL)
+		return;
 
-		n_arg->tp = arg->tp;
-		n_arg->m = arg->m;
-		n_arg->dir = NULL;
-		strcpy(n_arg->path, arg->path);
-		if(arg->path[strlen(arg->path) - 1] != '/')
-			strcat(n_arg->path, "/");
-		strcat(n_arg->path, d->d_name);
-	}
+	n_arg->tp = arg->tp;
+	n_arg->m = arg->m;
+	n_arg->dir = NULL;
+	strcpy(n_arg->path, arg->path);
+	if(arg->path[strlen(arg->path) - 1] != '/')
+		strcat(n_arg->path, "/");
+	strcat(n_arg->path, d->d_name);
 
 	//Enqueue directory reading tasks for all threads
 	tp_enqueueTask(n_arg->tp, dtt_worker, n_arg);
@@ -123,7 +119,9 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m)
 
 	strcpy(arg->path, path);
 
-	dtt_handle_dir(arg, NULL);
+	//Enqueue directory reading tasks for all threads
+	tp_enqueueTask(arg->tp, dtt_worker, arg);
+
 
 	return 0;
 }

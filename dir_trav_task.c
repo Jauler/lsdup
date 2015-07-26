@@ -38,7 +38,6 @@ void dtt_worker(void *_arg);
 
 static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 {
-	//TODO: add to map
 	return;
 }
 
@@ -51,10 +50,12 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 	if(strcmp("..", d->d_name) == 0)
 		return;
 
+	//allocate buffer for new taskarg. Also include string sizes
 	n_arg = malloc(sizeof(*n_arg) + strlen(arg->path) + strlen(d->d_name) + 2);
 	if(n_arg == NULL)
 		return;
 
+	//fill in taskarg struct
 	n_arg->tp = arg->tp;
 	n_arg->m = arg->m;
 	n_arg->dir = NULL;

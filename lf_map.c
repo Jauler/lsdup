@@ -132,7 +132,7 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 }
 
 
-int l_insert_with_findres(struct node *h, uint64_t key, void *data,
+int l_insert_with_findres(struct node *h, uint64_t key, uint64_t n_key, void *data,
 						struct srch_status *s, struct node **new)
 {
 	//Allocate node struct
@@ -142,6 +142,7 @@ int l_insert_with_findres(struct node *h, uint64_t key, void *data,
 
 	//Fill in data into node
 	n->key = key;
+	n->n_key = n_key;
 	n->data = data;
 	n->next.blk = 0;
 
@@ -172,10 +173,10 @@ int l_insert_with_findres(struct node *h, uint64_t key, void *data,
 
 	return 0;
 }
-int l_insert(struct node *h, uint64_t key, void *data)
+int l_insert(struct node *h, uint64_t key, uint64_t n_key, void *data)
 {
 	struct srch_status s;
-	return l_insert_with_findres(h, key, data, &s, NULL);
+	return l_insert_with_findres(h, key, n_key, data, &s, NULL);
 }
 
 
@@ -267,7 +268,8 @@ struct node *init_bucket(struct map *m, uint64_t bucket_id)
 	struct srch_status s;
 	struct node *new = NULL;
 	if(l_insert_with_findres(get_bucket(m, parent),
-					DUM_KEY(bucket_id), NULL, &s, &new) < 0){
+					DUM_KEY(bucket_id), LF_MAP_DUMMY_N_KEY,
+					NULL, &s, &new) < 0){
 		new = s.cur.ptr.ptr;
 	}
 
@@ -302,6 +304,7 @@ struct map *map_create(void)
 	//Fill in data
 	n->data = NULL;
 	n->key = 0;
+	n->n_key = LF_MAP_DUMMY_N_KEY;
 	n->next.blk = 0;
 
 	//Save dummy node to bucket
@@ -325,7 +328,7 @@ int map_add(struct map *m, uint64_t key, void *data)
 	}
 
 	//Try to find list
-	if((ret = l_insert(n, REG_KEY(key), data)) < 0)
+	if((ret = l_insert(n, REG_KEY(key), key, data)) < 0)
 		return ret;
 
 	//Take care of hash size

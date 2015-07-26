@@ -15,6 +15,7 @@
 
 #define LF_MAP_SEGMENT_SIZE		64
 
+#define LF_MAP_DUMMY_N_KEY		0xFFFFFFFFFFFFFFFFULL
 
 struct node;
 
@@ -43,6 +44,7 @@ union marked_ptr {
 struct node {
 	void *data;
 	uint64_t key;
+	uint64_t n_key;
 	union marked_ptr next;
 };
 

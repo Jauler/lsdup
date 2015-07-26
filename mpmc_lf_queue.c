@@ -39,10 +39,10 @@ struct mpmcq *MPMCQ_create(void)
 	node->next.blk = 0;
 
 	//Insert one dummy element
-	q->tail.ptr_cnt.ptr = node;
-	q->tail.ptr_cnt.cnt = 0;
-	q->head.ptr_cnt.ptr = node;
-	q->head.ptr_cnt.cnt = 0;
+	q->tail.ptr.ptr = node;
+	q->tail.ptr.cnt = 0;
+	q->head.ptr.ptr = node;
+	q->head.ptr.cnt = 0;
 
 	return q;
 }
@@ -54,7 +54,7 @@ void MPMCQ_destroy(struct mpmcq *q)
 	while(MPMCQ_dequeue(q) != NULL);
 
 	//Free dummy element
-	free(q->head.ptr_cnt.ptr);
+	free(q->head.ptr.ptr);
 
 	//Free queue struct
 	free(q);
@@ -84,28 +84,28 @@ int MPMCQ_enqueue(struct mpmcq *q, void *elem)
 	union ptr_with_tag tail, next;
 	while(1){
 		tail = q->tail;
-		next = tail.ptr_cnt.ptr->next;
+		next = tail.ptr.ptr->next;
 
 		//If other thread has inserted, try again
 		if(tail.blk != q->tail.blk)
 			continue;
 
 		//try to insert new node
-		if(next.ptr_cnt.ptr == NULL){
-			tmp.ptr_cnt.ptr = node;
-			tmp.ptr_cnt.cnt = next.ptr_cnt.cnt + 1;
-			if(CAS(&tail.ptr_cnt.ptr->next.blk, &next.blk, &tmp.blk))
+		if(next.ptr.ptr == NULL){
+			tmp.ptr.ptr = node;
+			tmp.ptr.cnt = next.ptr.cnt + 1;
+			if(CAS(&tail.ptr.ptr->next.blk, &next.blk, &tmp.blk))
 				break;
 		} else {
-			tmp.ptr_cnt.ptr = next.ptr_cnt.ptr;
-			tmp.ptr_cnt.cnt = tail.ptr_cnt.cnt + 1;
+			tmp.ptr.ptr = next.ptr.ptr;
+			tmp.ptr.cnt = tail.ptr.cnt + 1;
 			CAS(&q->tail.blk, &tail.blk, &tmp.blk);
 		}
 	}
 
 	//Update tail pointer
-	tmp.ptr_cnt.ptr = node;
-	tmp.ptr_cnt.cnt = tail.ptr_cnt.cnt + 1;
+	tmp.ptr.ptr = node;
+	tmp.ptr.cnt = tail.ptr.cnt + 1;
 	CAS(&q->tail.blk, &tail.blk, &tmp.blk);
 
 	return 0;
@@ -118,7 +118,7 @@ void *MPMCQ_dequeue(struct mpmcq *q)
 	while(1){
 		head = q->head;
 		tail = q->tail;
-		next = head.ptr_cnt.ptr->next;
+		next = head.ptr.ptr->next;
 
 		//If someone else has removed - try again
 		if(head.blk != q->head.blk)
@@ -126,22 +126,22 @@ void *MPMCQ_dequeue(struct mpmcq *q)
 
 		//Check for empty and new additions
 		//if ok remove element and return its data
-		if(head.ptr_cnt.ptr == tail.ptr_cnt.ptr){
-			if(next.ptr_cnt.ptr == NULL)
+		if(head.ptr.ptr == tail.ptr.ptr){
+			if(next.ptr.ptr == NULL)
 				return NULL;
-			tmp.ptr_cnt.ptr = next.ptr_cnt.ptr;
-			tmp.ptr_cnt.cnt = tail.ptr_cnt.cnt + 1;
+			tmp.ptr.ptr = next.ptr.ptr;
+			tmp.ptr.cnt = tail.ptr.cnt + 1;
 			CAS(&q->tail.blk, &tail.blk, &tmp.blk);
 		} else {
-			data = next.ptr_cnt.ptr->data;
-			tmp.ptr_cnt.ptr = next.ptr_cnt.ptr;
-			tmp.ptr_cnt.cnt = head.ptr_cnt.cnt + 1;
+			data = next.ptr.ptr->data;
+			tmp.ptr.ptr = next.ptr.ptr;
+			tmp.ptr.cnt = head.ptr.cnt + 1;
 			if(CAS(&q->head.blk, &head.blk, &tmp.blk))
 				break;
 		}
 	}
 
-	free(head.ptr_cnt.ptr);
+	free(head.ptr.ptr);
 	return data;
 }
 

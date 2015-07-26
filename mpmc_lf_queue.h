@@ -22,7 +22,7 @@ union ptr_with_tag {
 	struct ptr_with_cnt_s {
 		struct mpmcq_elem *ptr;
 		uint64_t cnt;
-	} ptr_cnt;
+	} ptr;
 
 };
 #else
@@ -31,7 +31,7 @@ union ptr_with_tag {
 	struct ptr_with_cnt_s {
 		struct mpmcq_elem *ptr;
 		uint32_t cnt;
-	} ptr_cnt;
+	} ptr;
 };
 #endif
 

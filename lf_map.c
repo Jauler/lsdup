@@ -93,34 +93,34 @@ TRY_AGAIN: //Really ugly, but references suggests that....
 	s->cur = h->next;
 
 	while(1){
-		if(s->cur.ptr_mrk.ptr == NULL)
+		if(s->cur.ptr.ptr == NULL)
 			return 0;
 
 		//save next pointer with mark
-		s->next.blk = s->cur.ptr_mrk.ptr->next.blk;
-		cur_key = s->cur.ptr_mrk.ptr->key;
+		s->next.blk = s->cur.ptr.ptr->next.blk;
+		cur_key = s->cur.ptr.ptr->key;
 
 		//Buildup sample unmarked pointer types for comparisons
-		cur_0.ptr_mrk.ptr = s->cur.ptr_mrk.ptr;
-		cur_0.ptr_mrk.mrk = 0;
-		cur_0.ptr_mrk.tag = s->cur.ptr_mrk.tag;
-		next_0.ptr_mrk.ptr = s->next.ptr_mrk.ptr;
-		next_0.ptr_mrk.mrk = 0;
-		next_0.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
+		cur_0.ptr.ptr = s->cur.ptr.ptr;
+		cur_0.ptr.mrk = 0;
+		cur_0.ptr.tag = s->cur.ptr.tag;
+		next_0.ptr.ptr = s->next.ptr.ptr;
+		next_0.ptr.mrk = 0;
+		next_0.ptr.tag = s->cur.ptr.tag + 1;
 
 		//Check if insertion did not happen
 		if(s->prev->blk != cur_0.blk)
 			goto TRY_AGAIN;
 
 		//Check if not marked for deletion
-		if(!s->next.ptr_mrk.mrk){
+		if(!s->next.ptr.mrk){
 			if(cur_key >= key)
 				return cur_key == key;
-			s->prev = &s->cur.ptr_mrk.ptr->next;
+			s->prev = &s->cur.ptr.ptr->next;
 		} else {
 			if(CAS(&s->prev->blk, &cur_0.blk, &next_0.blk)){
-				free(cur_0.ptr_mrk.ptr);
-				s->next.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
+				free(cur_0.ptr.ptr);
+				s->next.ptr.tag = s->cur.ptr.tag + 1;
 			} else {
 				goto TRY_AGAIN;
 			}
@@ -155,12 +155,12 @@ int l_insert_with_findres(struct node *h, uint64_t key, void *data,
 
 		//Set new element next pointer
 		n->next.blk = 0;
-		n->next.ptr_mrk.ptr = s->cur.ptr_mrk.ptr;
+		n->next.ptr.ptr = s->cur.ptr.ptr;
 
 		//Buildup marked pointer to new element
-		node_ptr.ptr_mrk.ptr = n;
-		node_ptr.ptr_mrk.mrk = 0;
-		node_ptr.ptr_mrk.tag = s->cur.ptr_mrk.tag + 1;
+		node_ptr.ptr.ptr = n;
+		node_ptr.ptr.mrk = 0;
+		node_ptr.ptr.tag = s->cur.ptr.tag + 1;
 
 		//Try to insert into list
 		if(CAS(&s->prev->blk, &s->cur.blk, &node_ptr.blk)){
@@ -190,24 +190,24 @@ int l_delete(struct node *h, uint64_t key)
 			return -ENOENT;
 
 		// Try to mark node as deleted
-		tmp[0].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
-		tmp[0].ptr_mrk.mrk = 0;
-		tmp[0].ptr_mrk.tag = s.next.ptr_mrk.tag;
-		tmp[1].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
-		tmp[1].ptr_mrk.mrk = 1;
-		tmp[1].ptr_mrk.tag = s.next.ptr_mrk.tag + 1;
-		if(!CAS(&s.cur.ptr_mrk.ptr->next.blk, &tmp[0].blk, &tmp[1].blk))
+		tmp[0].ptr.ptr = s.next.ptr.ptr;
+		tmp[0].ptr.mrk = 0;
+		tmp[0].ptr.tag = s.next.ptr.tag;
+		tmp[1].ptr.ptr = s.next.ptr.ptr;
+		tmp[1].ptr.mrk = 1;
+		tmp[1].ptr.tag = s.next.ptr.tag + 1;
+		if(!CAS(&s.cur.ptr.ptr->next.blk, &tmp[0].blk, &tmp[1].blk))
 			continue;
 
 		// Change links of linked list to skip our to-be-deleted node
-		tmp[0].ptr_mrk.ptr = s.cur.ptr_mrk.ptr;
-		tmp[0].ptr_mrk.mrk = 0;
-		tmp[0].ptr_mrk.tag = s.cur.ptr_mrk.tag;
-		tmp[1].ptr_mrk.ptr = s.next.ptr_mrk.ptr;
-		tmp[1].ptr_mrk.mrk = 0;
-		tmp[1].ptr_mrk.tag = s.cur.ptr_mrk.tag + 1;
+		tmp[0].ptr.ptr = s.cur.ptr.ptr;
+		tmp[0].ptr.mrk = 0;
+		tmp[0].ptr.tag = s.cur.ptr.tag;
+		tmp[1].ptr.ptr = s.next.ptr.ptr;
+		tmp[1].ptr.mrk = 0;
+		tmp[1].ptr.tag = s.cur.ptr.tag + 1;
 		if(CAS(&s.prev->blk, &tmp[0].blk, &tmp[1].blk))
-			free(s.cur.ptr_mrk.ptr);
+			free(s.cur.ptr.ptr);
 		else
 			l_isInList(h, key, &s);
 
@@ -225,7 +225,7 @@ struct node *get_bucket(struct map *m, uint64_t bucket_id)
 		return NULL;
 
 	uint64_t segment_off = GET_SEGMENT_OFF(bucket_id);
-	return m->ST[segment][segment_off].ptr_mrk.ptr;
+	return m->ST[segment][segment_off].ptr.ptr;
 }
 
 
@@ -249,8 +249,8 @@ int set_bucket(struct map *m, uint64_t bucket_id, struct node *n)
 
 	// Save head node
 	uint64_t segment_off = GET_SEGMENT_OFF(bucket_id);
-	m->ST[segment][segment_off].ptr_mrk.ptr = n;
-	m->ST[segment][segment_off].ptr_mrk.mrk = 0;
+	m->ST[segment][segment_off].ptr.ptr = n;
+	m->ST[segment][segment_off].ptr.mrk = 0;
 
 	return 0;
 }
@@ -268,7 +268,7 @@ struct node *init_bucket(struct map *m, uint64_t bucket_id)
 	struct node *new = NULL;
 	if(l_insert_with_findres(get_bucket(m, parent),
 					DUM_KEY(bucket_id), NULL, &s, &new) < 0){
-		new = s.cur.ptr_mrk.ptr;
+		new = s.cur.ptr.ptr;
 	}
 
 	//set pointer
@@ -355,7 +355,7 @@ void *map_find(struct map *m, uint64_t key)
 	if(!l_isInList(n, REG_KEY(key), &s))
 		return NULL;
 
-	return s.cur.ptr_mrk.ptr->data;
+	return s.cur.ptr.ptr->data;
 }
 
 
@@ -392,7 +392,7 @@ void map_print(struct map *m)
 	printf("  count: %d\n", m->count);
 
 	printf("Linked list:\n");
-	cur = m->ST[0][0].ptr_mrk.ptr;
+	cur = m->ST[0][0].ptr.ptr;
 	while(1){
 		//Check if we have reached end of list
 		if(cur == NULL){
@@ -409,7 +409,7 @@ void map_print(struct map *m)
 			printf("\n");
 
 		//go to next item
-		cur = cur->next.ptr_mrk.ptr;
+		cur = cur->next.ptr.ptr;
 	}
 
 	//Print buckets
@@ -421,8 +421,8 @@ void map_print(struct map *m)
 			continue;
 
 		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
-			if(m->ST[i][j].ptr_mrk.ptr != NULL)
-				printf("    {%d %lx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
+			if(m->ST[i][j].ptr.ptr != NULL)
+				printf("    {%d %lx}\n", j, m->ST[i][j].ptr.ptr->key);
 			else
 				printf("    {%d nil}\n", j);
 	}
@@ -440,7 +440,7 @@ void map_print(struct map *m)
 	printf("  count: %d\n", m->count);
 
 	printf("Linked list:\n");
-	cur = m->ST[0][0].ptr_mrk.ptr;
+	cur = m->ST[0][0].ptr.ptr;
 	while(1){
 		//Check if we have reached end of list
 		if(cur == NULL){
@@ -457,7 +457,7 @@ void map_print(struct map *m)
 			printf("\n");
 
 		//go to next item
-		cur = cur->next.ptr_mrk.ptr;
+		cur = cur->next.ptr.ptr;
 	}
 
 	//Print buckets
@@ -469,8 +469,8 @@ void map_print(struct map *m)
 			continue;
 
 		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
-			if(m->ST[i][j].ptr_mrk.ptr != NULL)
-				printf("    {%d %llx}\n", j, m->ST[i][j].ptr_mrk.ptr->key);
+			if(m->ST[i][j].ptr.ptr != NULL)
+				printf("    {%d %llx}\n", j, m->ST[i][j].ptr.ptr->key);
 			else
 				printf("    {%d nil}\n", j);
 	}

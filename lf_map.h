@@ -26,7 +26,7 @@ union marked_ptr {
 		struct node *ptr;
 		uint32_t mrk;
 		uint32_t tag;
-	} ptr_mrk;
+	} ptr;
 };
 #else
 union marked_ptr {
@@ -35,7 +35,7 @@ union marked_ptr {
 		struct node *ptr;
 		uint16_t mrk;
 		uint16_t tag;
-	} ptr_mrk;
+	} ptr;
 };
 #endif
 

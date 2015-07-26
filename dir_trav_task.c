@@ -9,22 +9,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
 #include "errno.h"
 #include "thread_pool.h"
 #include "lf_map.h"
+#include "mpmc_lf_queue.h"
 #include "dir_trav_task.h"
-
-
-#define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \
-														expected, \
-														desired, \
-														0, \
-														__ATOMIC_SEQ_CST, \
-														__ATOMIC_SEQ_CST)
 
 
 struct dtt_arg {
@@ -38,6 +33,40 @@ void dtt_worker(void *_arg);
 
 static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 {
+	//get memory for a pathname
+	int off = 0;
+	int pathname_len = strlen(arg->path);
+	int filename_len = strlen(f->d_name);
+	char *name = malloc(pathname_len + filename_len + 2);
+	if(name ==  NULL){
+		//TODO: use writer thread
+		fprintf(stderr, "Error: %s\n", strerror(ENOMEM));
+		return;
+	}
+
+	//format full pathname
+	memcpy(name, arg->path, pathname_len);
+	if(arg->path[pathname_len - 1] != '/'){
+		name[pathname_len] = '/';
+		off = 1;
+	}
+	memcpy(name + pathname_len + off, f->d_name, filename_len);
+	name[pathname_len + off + filename_len] = 0;
+
+	//stat the file to figure out its size
+	struct stat fs;
+	stat(name, &fs);
+
+	//try to find a file with the same size
+	void *eq_sz_list;
+	if((eq_sz_list = map_find(arg->m, fs.st_size)) == NULL){
+		eq_sz_list = MPMCQ_create();
+		map_add(arg->m, fs.st_size, eq_sz_list);
+	}
+
+	//enqueue file
+	MPMCQ_enqueue(eq_sz_list, name);
+
 	return;
 }
 
@@ -78,6 +107,7 @@ void dtt_worker(void *_arg)
 
 	arg->dir = opendir(arg->path);
 	if(arg->dir == NULL){
+		//TODO: user writer thread
 		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(errno));
 		return;
 	}
@@ -99,6 +129,7 @@ void dtt_worker(void *_arg)
 	}
 
 	if(status != 0)
+		//TODO: use writer thread
 		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(status));
 
 	closedir(arg->dir);
@@ -114,10 +145,10 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m)
 	if(arg == NULL)
 		return -ENOMEM;
 
+	//Fill in data
 	arg->tp = tp;
 	arg->m = m;
 	arg->dir = NULL;
-
 	strcpy(arg->path, path);
 
 	//Enqueue directory reading tasks for all threads

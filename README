@@ -18,6 +18,8 @@ Also GCC needs to support these features on target platform:
 	* __atomic_compare_exchange_16 for 64 bit CPUs
 	* __atomic_compare_exchange
 	* __int128 for 64 bit machines
+	* __atomic_add_fetch
+	* __atomic_sub_fetch
 
 
 Build

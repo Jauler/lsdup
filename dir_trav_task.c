@@ -38,7 +38,7 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	int off = 0;
 	int pathname_len = strlen(arg->path);
 	int filename_len = strlen(f->d_name);
-	struct file_desc *fd = calloc(1, sizeof(*f) + pathname_len + filename_len + 2);
+	struct file_desc *fd = calloc(1, sizeof(*fd) + pathname_len + filename_len + 2);
 	if(fd ==  NULL){
 		//TODO: use writer thread
 		fprintf(stderr, "Error: %s\n", strerror(ENOMEM));

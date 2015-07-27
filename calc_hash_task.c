@@ -61,7 +61,7 @@ void cht_hash_calc_worker(void *_arg)
 			curr_size = CHT_HASH_CHUNK;
 
 		if(fread(buff, curr_size, 1, f) != 1){
-			fprintf(stderr, "Read error\n");
+			fprintf(stderr, "Error reading file: %s\n", fd->filename);
 			goto CLEANUP;
 		}
 

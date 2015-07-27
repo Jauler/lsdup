@@ -15,9 +15,12 @@
 #include "thread_pool.h"
 #include "lf_map.h"
 #include "dir_trav_task.h"
+#include "calc_hash_task.h"
 
 int main(int argc, char *argv[])
 {
+	struct timespec ts = {0, 1000000};
+
 	printf("Hello World\n");
 
 	struct thread_pool *tp = tp_create(5);
@@ -39,9 +42,20 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	struct timespec ts = {0, 1000000};
+	//Wait for end of traversing
 	while(tp->num_enqueued_tasks != 0)
 		nanosleep(&ts, NULL);
+
+	//Calculate hashes of potential matches
+	if(cht_start(tp, m) != 0){
+		fprintf(stderr, "Could not calculate hashes\n");
+		return -EINVAL;
+	}
+
+	//Wait for end of hashing
+	while(tp->num_enqueued_tasks != 0)
+		nanosleep(&ts, NULL);
+
 
 	return 0;
 }

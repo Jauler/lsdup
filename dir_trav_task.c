@@ -20,6 +20,7 @@
 #include "lf_map.h"
 #include "mpmc_lf_queue.h"
 #include "dir_trav_task.h"
+#include "file_desc.h"
 
 
 struct dtt_arg {
@@ -37,25 +38,32 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	int off = 0;
 	int pathname_len = strlen(arg->path);
 	int filename_len = strlen(f->d_name);
-	char *name = malloc(pathname_len + filename_len + 2);
-	if(name ==  NULL){
+	struct file_desc *fd = calloc(1, sizeof(*f) + pathname_len + filename_len + 2);
+	if(fd ==  NULL){
 		//TODO: use writer thread
 		fprintf(stderr, "Error: %s\n", strerror(ENOMEM));
 		return;
 	}
 
 	//format full pathname
-	memcpy(name, arg->path, pathname_len);
+	memcpy(fd->filename, arg->path, pathname_len);
 	if(arg->path[pathname_len - 1] != '/'){
-		name[pathname_len] = '/';
+		fd->filename[pathname_len] = '/';
 		off = 1;
 	}
-	memcpy(name + pathname_len + off, f->d_name, filename_len);
-	name[pathname_len + off + filename_len] = 0;
+	memcpy(fd->filename + pathname_len + off, f->d_name, filename_len);
+	fd->filename[pathname_len + off + filename_len] = 0;
 
 	//stat the file to figure out its size
 	struct stat fs;
-	stat(name, &fs);
+	if(stat(fd->filename, &fs) != 0){
+		//TODO: use writer thread
+		fprintf(stderr, "Error: %s: %s\n", fd->filename, strerror(errno));
+		free(fd);
+		return;
+	}
+
+	fd->size = fs.st_size;
 
 	//try to find a file with the same size
 	void *eq_sz_list;
@@ -65,7 +73,7 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	}
 
 	//enqueue file
-	MPMCQ_enqueue(eq_sz_list, name);
+	MPMCQ_enqueue(eq_sz_list, fd);
 
 	return;
 }

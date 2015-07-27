@@ -10,10 +10,6 @@
 #ifndef DIR_TRAV_TASK_H
 #define DIR_TRAV_TASK_H
 
-#include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
-
 #include "thread_pool.h"
 #include "lf_map.h"
 

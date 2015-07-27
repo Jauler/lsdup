@@ -42,7 +42,7 @@ void murmur3(const void *data, const int len, uint64_t *out)
 
 	//Initiate seed and constants
 	uint64_t h1 = out[0];
-	uint64_t h2 = out[2];
+	uint64_t h2 = out[1];
 	uint64_t c1 = 0x87c37b91114253d5ULL;
 	uint64_t c2 = 0x4cf5ad432745937fULL;
 
@@ -75,7 +75,7 @@ void murmur3(const void *data, const int len, uint64_t *out)
 
 	//Deal with unaligned bytes
 	//NOTE: there should be a smarter way for dealing with this
-	uint8_t *buf8 = (uint8_t *)((uint8_t *)data + blkCnt*16);
+	uint8_t *buf8 = (uint8_t *)(data + blkCnt*16);
 	k1 = 0;
 	k2 = 0;
 	switch(len & 0xF){
@@ -112,12 +112,12 @@ void murmur3(const void *data, const int len, uint64_t *out)
 	}
 
 	k2 *= c2;
-	k2  = rotl64(k2,33);
+	k2  = rotl64(k2, 33);
 	k2 *= c1;
 	h2 ^= k2;
 
 	k1 *= c1;
-	k1  = rotl64(k1,31);
+	k1  = rotl64(k1, 31);
 	k1 *= c2;
 	h1 ^= k1;
 

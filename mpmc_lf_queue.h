@@ -44,6 +44,7 @@ struct mpmcq_elem{
 struct mpmcq {
 	union ptr_with_tag head;
 	union ptr_with_tag tail;
+	int elem_cnt;
 };
 
 

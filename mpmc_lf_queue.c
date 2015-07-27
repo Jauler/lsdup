@@ -107,6 +107,7 @@ int MPMCQ_enqueue(struct mpmcq *q, void *elem)
 	tmp.ptr.ptr = node;
 	tmp.ptr.cnt = tail.ptr.cnt + 1;
 	CAS(&q->tail.blk, &tail.blk, &tmp.blk);
+	__atomic_add_fetch(&q->elem_cnt, 1, __ATOMIC_SEQ_CST);
 
 	return 0;
 }
@@ -140,6 +141,7 @@ void *MPMCQ_dequeue(struct mpmcq *q)
 				break;
 		}
 	}
+	__atomic_sub_fetch(&q->elem_cnt, 1, __ATOMIC_SEQ_CST);
 
 	free(head.ptr.ptr);
 	return data;

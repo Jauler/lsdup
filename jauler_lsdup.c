@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
 	printf("Hello World\n");
 
-	struct thread_pool *tp = tp_create(5);
+	struct thread_pool *tp = tp_create(4);
 	if(tp == NULL){
 		fprintf(stderr, "Could not create thread pool\n");
 		return -ENOMEM;

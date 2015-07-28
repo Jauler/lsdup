@@ -22,8 +22,6 @@ int main(int argc, char *argv[])
 {
 	struct timespec ts = {0, 1000000};
 
-	printf("Hello World\n");
-
 	struct thread_pool *tp = tp_create(4);
 	if(tp == NULL){
 		fprintf(stderr, "Could not create thread pool\n");

@@ -77,16 +77,16 @@ void ct_file_worker(void *_arg)
 		//read chunks from files
 		if(fread(buff1, chunk_size, 1, f1) != 1){
 			fprintf(stderr, "Error reading file %s\n", arg->f1->filename);
-			return;
+			goto CLEANUP;
 		}
 		if(fread(buff2, chunk_size, 1, f2) != 1){
 			fprintf(stderr, "Error reading file %s\n", arg->f1->filename);
-			return;
+			goto CLEANUP;
 		}
 
 		//compare buffers
 		if(memcmp(buff1, buff2, chunk_size) != 0)
-			return;
+			goto CLEANUP;
 
 		//increment size counter
 		compared_size += chunk_size;

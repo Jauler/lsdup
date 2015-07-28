@@ -10,6 +10,7 @@
 #define __CALC_HASH_TASK_H
 
 #include "lf_map.h"
+#include "thread_pool.h"
 
 #define CHT_HASH_CALC_THD			4
 
@@ -19,7 +20,8 @@
  * of the same size
  *
  * Arguments:
- *		m - map of files to do a hash calculation on
+ *		tp - thread pool for task execution
+ *		m  - map of files to do a hash calculation on
  *
  * Return:
  *		0                   - on success

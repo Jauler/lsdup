@@ -16,6 +16,7 @@
 #include "lf_map.h"
 #include "dir_trav_task.h"
 #include "calc_hash_task.h"
+#include "compare_task.h"
 
 int main(int argc, char *argv[])
 {
@@ -48,6 +49,16 @@ int main(int argc, char *argv[])
 
 	//Calculate hashes of potential matches
 	if(cht_start(tp, m) != 0){
+		fprintf(stderr, "Could not calculate hashes\n");
+		return -EINVAL;
+	}
+
+	//Wait for end of hashing
+	while(tp->num_enqueued_tasks != 0)
+		nanosleep(&ts, NULL);
+
+	//Calculate hashes of potential matches
+	if(ct_start(tp, m, NULL) != 0){
 		fprintf(stderr, "Could not calculate hashes\n");
 		return -EINVAL;
 	}

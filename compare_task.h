@@ -11,6 +11,7 @@
 
 #include "thread_pool.h"
 #include "lf_map.h"
+#include "writer.h"
 
 /*
  * Compare hashes and files to figure out if they are the same in content
@@ -25,7 +26,8 @@
  *		negative error code - on failure
  *
  */
-int ct_start(struct thread_pool *tp, struct map *m, struct mpmcq *wq);
+int ct_start(struct thread_pool *tp, struct map *m, struct writer *w);
+
 
 #endif
 

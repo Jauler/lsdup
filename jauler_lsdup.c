@@ -17,10 +17,18 @@
 #include "dir_trav_task.h"
 #include "calc_hash_task.h"
 #include "compare_task.h"
+#include "writer.h"
 
 int main(int argc, char *argv[])
 {
 	struct timespec ts = {0, 1000000};
+
+	//create writer
+	struct writer *w = w_create();
+	if(w == NULL){
+		fprintf(stderr, "Could not create writer\n");
+		return -ENOMEM;
+	}
 
 	struct thread_pool *tp = tp_create(4);
 	if(tp == NULL){
@@ -56,7 +64,7 @@ int main(int argc, char *argv[])
 		nanosleep(&ts, NULL);
 
 	//Calculate hashes of potential matches
-	if(ct_start(tp, m, NULL) != 0){
+	if(ct_start(tp, m, w) != 0){
 		fprintf(stderr, "Could not calculate hashes\n");
 		return -EINVAL;
 	}

@@ -17,6 +17,7 @@
 #include "mpmc_lf_queue.h"
 #include "list_utils.h"
 #include "file_desc.h"
+#include "writer.h"
 
 #include "compare_task.h"
 
@@ -25,7 +26,7 @@
 struct comparison_arg {
 	struct map *m;
 	struct thread_pool *tp;
-	struct mpmcq *wq;
+	struct writer *w;
 
 	struct mpmcq *matchlist;
 
@@ -33,6 +34,18 @@ struct comparison_arg {
 	struct file_desc *f2;
 };
 
+static int ct_enq_writer(struct writer *w, char *f1, char *f2)
+{
+	//Send matching filenames to writer thread
+	int f1_len = strlen(f1);
+	int f2_len = strlen(f2);
+	char *msg = malloc(f1_len + f2_len + 2);
+	memcpy(msg, f1, f1_len);
+	msg[f1_len] = ' ';
+	memcpy(&msg[f1_len + 1], f2, f2_len);
+	msg[f1_len + f2_len + 1] = 0;
+	return MPMCQ_enqueue(w->wq, msg);
+}
 
 void ct_file_worker(void *_arg)
 {
@@ -92,8 +105,7 @@ void ct_file_worker(void *_arg)
 		compared_size += chunk_size;
 	}
 
-	//TODO: use writer thread
-	fprintf(stdout, "%s %s\n", arg->f1->filename, arg->f2->filename);
+	ct_enq_writer(arg->w, arg->f1->filename, arg->f2->filename);
 
 CLEANUP:
 	free(buff1);
@@ -131,8 +143,7 @@ void ct_hash_worker(void *_arg)
 
 			//if both sizes are equal to zero - we treat files as the same in content
 			if(base_fd->size == 0 && trg_fd->size == 0){
-				//TODO: use writer thread
-				fprintf(stdout, "%s %s\n", base_fd->filename, trg_fd->filename);
+				ct_enq_writer(arg->w, base_fd->filename, trg_fd->filename);
 				continue;
 			}
 
@@ -151,7 +162,7 @@ void ct_hash_worker(void *_arg)
 			//fill in fields
 			n_arg->m = arg->m;
 			n_arg->tp = arg->tp;
-			n_arg->wq = arg->wq;
+			n_arg->w = arg->w;
 			n_arg->matchlist = NULL;
 			n_arg->f1 = base_fd;
 			n_arg->f2 = trg_fd;
@@ -197,7 +208,7 @@ void ct_enq_worker(void *_arg)
 		}
 		n_arg->m = arg->m;
 		n_arg->tp = arg->tp;
-		n_arg->wq = arg->wq;
+		n_arg->w = arg->w;
 		n_arg->matchlist = matchlist;
 
 		//enqueue for hash processing
@@ -210,7 +221,7 @@ void ct_enq_worker(void *_arg)
 }
 
 
-int ct_start(struct thread_pool *tp, struct map *m, struct mpmcq *wq)
+int ct_start(struct thread_pool *tp, struct map *m, struct writer *w)
 {
 	//Allocate arguments struct
 	struct comparison_arg *arg = malloc(sizeof(*arg));
@@ -220,7 +231,7 @@ int ct_start(struct thread_pool *tp, struct map *m, struct mpmcq *wq)
 	//fill in fields
 	arg->m = m;
 	arg->tp = tp;
-	arg->wq = wq;
+	arg->w = w;
 
 	return tp_enqueueTask(tp, ct_enq_worker, arg);
 }

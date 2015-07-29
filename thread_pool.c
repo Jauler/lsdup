@@ -27,6 +27,9 @@ static void *thread_worker(void *arg)
 	int waiting = 0;
 
 	while(1){
+		//check if we need to pause
+		while(tp->pause)
+			nanosleep(&ts, NULL);
 
 		//Try to get one work
 		if((t = MPMCQ_dequeue(tp->wq)) == NULL){
@@ -109,6 +112,19 @@ int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg)
 	return status;
 }
 
+
+void tp_pause(struct thread_pool *tp)
+{
+	tp->pause = 1;
+	return;
+}
+
+
+void tp_resume(struct thread_pool *tp)
+{
+	tp->pause = 0;
+	return;
+}
 
 
 

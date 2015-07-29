@@ -19,6 +19,7 @@ struct thread_pool {
 	int num_threads;
 	int num_waiting_threads;
 	int num_enqueued_tasks;
+	int pause;
 };
 
 
@@ -49,6 +50,25 @@ struct thread_pool *tp_create(unsigned int num_threads);
  *		negative error code - on failure
  */
 int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg);
+
+
+/*
+ * Pause threads execution.
+ *
+ * Arguments:
+ *		tp - struct thread pool previously returned by tp_create
+ *
+ */
+void tp_pause(struct thread_pool *tp);
+
+/*
+ * Resume threads execution if it was previusly pused
+ *
+ * Arguments:
+ *		tp - struct thread pool previously returned by tp_create
+ *
+ */
+void tp_resume(struct thread_pool *tp);
 
 
 #endif

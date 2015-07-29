@@ -30,12 +30,14 @@ int main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
+	//Create thread pool
 	struct thread_pool *tp = tp_create(4);
 	if(tp == NULL){
 		fprintf(stderr, "Could not create thread pool\n");
 		return -ENOMEM;
 	}
 
+	//Create empty map of potential matches by size
 	struct map *m = map_create();
 	if(m == NULL){
 		fprintf(stderr, "Could not create map\n");
@@ -72,7 +74,6 @@ int main(int argc, char *argv[])
 	//Wait for end of hashing
 	while(tp->num_enqueued_tasks != 0)
 		nanosleep(&ts, NULL);
-
 
 	return 0;
 }

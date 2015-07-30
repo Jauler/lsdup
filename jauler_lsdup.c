@@ -126,7 +126,9 @@ int main(int argc, char *argv[])
 	}
 
 	//Wait for end of hashing
-	while(tp->num_enqueued_tasks != 0 || w->wq->elem_cnt != 0){
+	while(tp->num_enqueued_tasks != 0 ||
+			tp->num_waiting_threads != tp->num_threads ||
+			w->wq->elem_cnt != 0){
 		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}

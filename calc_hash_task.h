@@ -13,7 +13,7 @@
 #include "thread_pool.h"
 
 
-#define CHT_HASH_CALC_THD			4
+#define CHT_HASH_CALC_THD			3
 
 
 /*

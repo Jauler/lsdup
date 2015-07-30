@@ -22,6 +22,7 @@
 #include "free_map_task.h"
 #include "writer.h"
 
+
 #define MAX_LINE			512
 static void UI(struct thread_pool *tp, struct writer *w)
 {
@@ -126,7 +127,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	//Wait for end of hashing
+	//Wait for end of comparing
 	while(tp->num_enqueued_tasks != 0 ||
 			tp->num_waiting_threads != tp->num_threads ||
 			w->wq->elem_cnt != 0){

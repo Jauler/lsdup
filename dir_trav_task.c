@@ -30,7 +30,9 @@ struct dtt_arg {
 	char path[];
 };
 
+
 void dtt_worker(void *_arg);
+
 
 static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 {
@@ -76,6 +78,7 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	return;
 }
 
+
 static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 {
 	struct dtt_arg *n_arg;
@@ -100,6 +103,7 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 
 	return;
 }
+
 
 void dtt_worker(void *_arg)
 {
@@ -162,7 +166,6 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m, char *out)
 
 	//Enqueue directory reading tasks for all threads
 	tp_enqueueTask(arg->tp, dtt_worker, arg);
-
 
 	return 0;
 }

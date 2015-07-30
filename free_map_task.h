@@ -28,5 +28,4 @@
 int fmt_start(struct thread_pool *tp, struct map *m);
 
 
-
 #endif

@@ -9,9 +9,10 @@ Dependencies and requirements
 ======================================
 
 These packages are required in order to succesfully compile utility:
-	* gcc
+	* gcc (tested with gcc 4.8.4 and 5.2.0)
 	* glibc
 	* pthread
+	* make
 
 Also GCC needs to support these features on target platform:
 	* __atomic_compare_exchange_8 for 32 bit CPUs

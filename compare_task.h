@@ -13,6 +13,7 @@
 #include "lf_map.h"
 #include "writer.h"
 
+
 /*
  * Compare hashes and files to figure out if they are the same in content
  *

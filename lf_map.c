@@ -151,7 +151,7 @@ int l_insert_with_findres(struct node *h, uint64_t key, uint64_t n_key, void *da
 		//Search for a place to insert our element
 		if(l_isInList(h, key, s)){
 			free(n);
-			return -EEXIST;//TODO: add support for multiple values
+			return -EEXIST;
 		}
 
 		//Set new element next pointer
@@ -415,101 +415,4 @@ int map_rm(struct map *m, uint64_t key)
 	return 0;
 }
 
-#ifdef __x86_64__
-void map_print(struct map *m)
-{
-	int i = 0, j;
-	struct node *cur;
-
-	printf("Map:\n");
-	printf("  size: %d\n", m->size);
-	printf("  count: %d\n", m->count);
-
-	printf("Linked list:\n");
-	cur = m->ST[0][0].ptr.ptr;
-	while(1){
-		//Check if we have reached end of list
-		if(cur == NULL){
-			printf("NULL\n");
-			break;
-		}
-
-		//Print key
-		printf("[%lx]->", cur->key);
-
-		//Do not overrun lines
-		i++;
-		if(i % 5 == 0)
-			printf("\n");
-
-		//go to next item
-		cur = cur->next.ptr.ptr;
-	}
-
-	//Print buckets
-	printf("Buckets:\n");
-	for(i = 0; i < LF_MAP_SEGMENT_SIZE; i++){
-		printf("[%i %p]\n", i, m->ST[i]);
-
-		if(m->ST[i] == NULL)
-			continue;
-
-		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
-			if(m->ST[i][j].ptr.ptr != NULL)
-				printf("    {%d %lx}\n", j, m->ST[i][j].ptr.ptr->key);
-			else
-				printf("    {%d nil}\n", j);
-	}
-
-	return;
-}
-#else
-void map_print(struct map *m)
-{
-	int i, j;
-	struct node *cur;
-
-	printf("Map:\n");
-	printf("  size: %d\n", m->size);
-	printf("  count: %d\n", m->count);
-
-	printf("Linked list:\n");
-	cur = m->ST[0][0].ptr.ptr;
-	while(1){
-		//Check if we have reached end of list
-		if(cur == NULL){
-			printf("NULL\n");
-			break;
-		}
-
-		//Print key
-		printf("[%llx]->", cur->key);
-
-		//Do not overrun lines
-		i++;
-		if(i % 5 == 0)
-			printf("\n");
-
-		//go to next item
-		cur = cur->next.ptr.ptr;
-	}
-
-	//Print buckets
-	printf("Buckets:\n");
-	for(i = 0; i < LF_MAP_SEGMENT_SIZE; i++){
-		printf("[%i %p]\n", i, m->ST[i]);
-
-		if(m->ST[i] == NULL)
-			continue;
-
-		for(j = 0; j < GET_SEGMENT_SIZE(i); j++)
-			if(m->ST[i][j].ptr.ptr != NULL)
-				printf("    {%d %llx}\n", j, m->ST[i][j].ptr.ptr->key);
-			else
-				printf("    {%d nil}\n", j);
-	}
-
-	return;
-}
-#endif
 

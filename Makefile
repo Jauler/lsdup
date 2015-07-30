@@ -1,5 +1,5 @@
 
-BIN_NAME = jauler-lsdup
+BIN_NAME = jauler_lsdup
 
 #Compiler flags
 CFLAGS = -Werror -Wall -std=gnu99 -mcx16 -pthread -O3

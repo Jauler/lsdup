@@ -118,9 +118,6 @@ void *map_find(struct map *m, uint64_t key);
 int map_rm(struct map *m, uint64_t key);
 
 
-//DEBUG tools
-void map_print(struct map *m);
-
 #endif
 
 

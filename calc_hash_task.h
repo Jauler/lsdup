@@ -12,7 +12,9 @@
 #include "lf_map.h"
 #include "thread_pool.h"
 
+
 #define CHT_HASH_CALC_THD			4
+
 
 /*
  * Calculate hashes of files of the same size

@@ -21,7 +21,7 @@
 
 #include "calc_hash_task.h"
 
-#define CHT_HASH_CHUNK			1048576
+#define CHT_HASH_CHUNK			1048576 //1MB
 
 
 struct cht_enq_files_arg {

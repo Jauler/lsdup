@@ -20,7 +20,9 @@
 
 #include "compare_task.h"
 
-#define CT_CMP_CHUNK		1048576
+
+#define CT_CMP_CHUNK		1048576 //1MB
+
 
 struct comparison_arg {
 	struct map *m;
@@ -32,6 +34,7 @@ struct comparison_arg {
 	struct file_desc *f1;
 	struct file_desc *f2;
 };
+
 
 static int ct_enq_writer(struct writer *w, char *f1, char *f2)
 {
@@ -46,6 +49,7 @@ static int ct_enq_writer(struct writer *w, char *f1, char *f2)
 	msg[f1_len + f2_len + 2] = 0;
 	return MPMCQ_enqueue(w->wq, msg);
 }
+
 
 void ct_file_worker(void *_arg)
 {

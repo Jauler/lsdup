@@ -21,6 +21,7 @@
 														__ATOMIC_SEQ_CST, \
 														__ATOMIC_SEQ_CST)
 
+
 struct mpmcq *MPMCQ_create(void)
 {
 	//Allocate structures
@@ -113,6 +114,7 @@ int MPMCQ_enqueue(struct mpmcq *q, void *elem)
 	return 0;
 }
 
+
 void *MPMCQ_dequeue(struct mpmcq *q)
 {
 	void *data = NULL;
@@ -147,8 +149,5 @@ void *MPMCQ_dequeue(struct mpmcq *q)
 	free(head.ptr.ptr);
 	return data;
 }
-
-
-
 
 

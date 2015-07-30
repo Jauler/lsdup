@@ -97,7 +97,6 @@ int MPMCQ_enqueue(struct mpmcq *q, void *elem);
 void *MPMCQ_dequeue(struct mpmcq *q);
 
 
-
 #endif
 
 

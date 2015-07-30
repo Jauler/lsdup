@@ -34,7 +34,6 @@ static inline uint64_t fmix64(uint64_t k)
 }
 
 
-
 void murmur3(const void *data, const int len, uint64_t *out)
 {
 	int i;
@@ -140,8 +139,5 @@ void murmur3(const void *data, const int len, uint64_t *out)
 
 	return;
 }
-
-
-
 
 

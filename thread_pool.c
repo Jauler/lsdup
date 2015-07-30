@@ -69,16 +69,9 @@ struct thread_pool *tp_create(unsigned int num_threads)
 	int i;
 
 	//Allocate thread_pool structure
-	struct thread_pool *tp = malloc(sizeof(*tp));
+	struct thread_pool *tp = calloc(1, sizeof(*tp) + sizeof(pthread_t) * num_threads);
 	if(tp == NULL)
 		return NULL;
-
-	//Allocate memory for thread array
-	tp->thread = calloc(num_threads, sizeof(*tp->thread));
-	if(tp->thread == NULL){
-		free(tp);
-		return NULL;
-	}
 
 	//Create workqueue
 	tp->wq = MPMCQ_create();

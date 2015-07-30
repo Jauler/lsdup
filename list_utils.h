@@ -1,5 +1,5 @@
 /*
- * Lock free hash container implementation
+ * Utilities for MPMCQ and LF_MAP lists
  *
  * Author: Rytis Karpuška
  *         rytis.karpuska@gmail.com
@@ -13,14 +13,14 @@
 //does not change!!!
 
 //Data acquisition
-#define L_DATA(list)				((list)->data)
-#define L_KEY(list)					((list)->n_key)
+#define L_DATA(list)			((list)->data)
+#define L_KEY(list)				((list)->n_key)
 
 //Movement
-#define L_NEXT(list)				((list)->next.ptr.ptr)
+#define L_NEXT(list)			((list)->next.ptr.ptr)
 
 //Iteration
-#define L_FOREACH(item, list)		for(item = list; item != NULL; item = L_NEXT(item))
+#define L_FOREACH(item, list)	for(item = list; item != NULL; item = L_NEXT(item))
 
 #endif
 

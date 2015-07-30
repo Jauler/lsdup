@@ -17,10 +17,10 @@
 
 struct writer {
 	pthread_t pthread;
-	struct mpmcq *wq;
-	int pause;
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
+	struct mpmcq *wq;
+	int pause;
 	FILE *out;
 };
 
@@ -36,7 +36,7 @@ struct writer *w_create(char *filename);
 
 
 /*
- * Pause writer execution.
+ * Pause writer execution
  *
  * Arguments:
  *		tp - struct thread pool previously returned by tp_create
@@ -45,7 +45,7 @@ struct writer *w_create(char *filename);
 void w_pause(struct writer *w);
 
 /*
- * Resume threads execution if it was previusly pused
+ * Resume threads execution if it was previously paused
  *
  * Arguments:
  *		tp - struct thread pool previously returned by tp_create

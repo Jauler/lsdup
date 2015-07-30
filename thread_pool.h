@@ -14,7 +14,6 @@
 #include "mpmc_lf_queue.h"
 
 struct thread_pool {
-	pthread_t *thread;
 	struct mpmcq *wq;
 	int num_threads;
 	int num_waiting_threads;
@@ -22,6 +21,7 @@ struct thread_pool {
 	int pause;
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
+	pthread_t thread[];
 };
 
 

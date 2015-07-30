@@ -1,5 +1,5 @@
 /*
- * File description for use in list of potential matches
+ * File description structure for use in list of potential matches
  *
  * Author: Rytis Karpuška
  *         rytis.karpuska@gmail.com
@@ -13,7 +13,6 @@
 #include <stdint.h>
 
 struct file_desc {
-
 	uint64_t hash[2];
 	int hash_valid;
 

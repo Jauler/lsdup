@@ -28,8 +28,10 @@ static void *thread_worker(void *arg)
 
 	while(1){
 		//check if we need to pause
+		pthread_mutex_lock(&tp->mutex);
 		while(tp->pause)
-			nanosleep(&ts, NULL);
+			pthread_cond_wait(&tp->cond, &tp->mutex);
+		pthread_mutex_unlock(&tp->mutex);
 
 		//Try to get one work
 		if((t = MPMCQ_dequeue(tp->wq)) == NULL){
@@ -83,6 +85,11 @@ struct thread_pool *tp_create(unsigned int num_threads)
 	tp->num_threads = num_threads;
 	tp->num_waiting_threads = 0;
 
+	//Init mutex and thread for thread sleeping
+	pthread_cond_init(&tp->cond, NULL);
+	pthread_mutex_init(&tp->mutex, NULL);
+	tp->pause = 0;
+
 	//create actual threads
 	for(i = 0; i < num_threads; i++)
 		pthread_create(&tp->thread[i], NULL, thread_worker, tp);
@@ -115,14 +122,19 @@ int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg)
 
 void tp_pause(struct thread_pool *tp)
 {
+	pthread_mutex_lock(&tp->mutex);
 	tp->pause = 1;
+	pthread_mutex_unlock(&tp->mutex);
 	return;
 }
 
 
 void tp_resume(struct thread_pool *tp)
 {
+	pthread_mutex_lock(&tp->mutex);
 	tp->pause = 0;
+	pthread_cond_broadcast(&tp->cond);
+	pthread_mutex_unlock(&tp->mutex);
 	return;
 }
 

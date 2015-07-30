@@ -20,6 +20,8 @@ struct thread_pool {
 	int num_waiting_threads;
 	int num_enqueued_tasks;
 	int pause;
+	pthread_cond_t cond;
+	pthread_mutex_t mutex;
 };
 
 

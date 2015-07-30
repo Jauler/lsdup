@@ -26,6 +26,7 @@
 struct dtt_arg {
 	struct thread_pool *tp;
 	struct map *m;
+	char *out;
 	DIR *dir;
 	char path[];
 };
@@ -40,7 +41,6 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	int filename_len = strlen(f->d_name);
 	struct file_desc *fd = calloc(1, sizeof(*fd) + pathname_len + filename_len + 2);
 	if(fd ==  NULL){
-		//TODO: use writer thread
 		fprintf(stderr, "Error: %s\n", strerror(ENOMEM));
 		return;
 	}
@@ -57,7 +57,6 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	//stat the file to figure out its size
 	struct stat fs;
 	if(stat(fd->filename, &fs) != 0){
-		//TODO: use writer thread
 		fprintf(stderr, "Error: %s: %s\n", fd->filename, strerror(errno));
 		free(fd);
 		return;
@@ -82,11 +81,6 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 {
 	struct dtt_arg *n_arg;
 
-	if(strcmp(".", d->d_name) == 0)
-		return;
-	if(strcmp("..", d->d_name) == 0)
-		return;
-
 	//allocate buffer for new taskarg. Also include string sizes
 	n_arg = malloc(sizeof(*n_arg) + strlen(arg->path) + strlen(d->d_name) + 2);
 	if(n_arg == NULL)
@@ -95,6 +89,7 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 	//fill in taskarg struct
 	n_arg->tp = arg->tp;
 	n_arg->m = arg->m;
+	n_arg->out = arg->out;
 	n_arg->dir = NULL;
 	strcpy(n_arg->path, arg->path);
 	if(arg->path[strlen(arg->path) - 1] != '/')
@@ -115,7 +110,6 @@ void dtt_worker(void *_arg)
 
 	arg->dir = opendir(arg->path);
 	if(arg->dir == NULL){
-		//TODO: user writer thread
 		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(errno));
 		return;
 	}
@@ -127,6 +121,14 @@ void dtt_worker(void *_arg)
 		if(d == NULL)
 			break;
 
+		if(strcmp(".", d->d_name) == 0)
+			continue;
+		if(strcmp("..", d->d_name) == 0)
+			continue;
+		if(strcmp(arg->out, d->d_name) == 0)
+			continue;
+
+
 		//Handle new directory
 		if(d->d_type == DT_DIR)
 			dtt_handle_dir(arg, d);
@@ -137,7 +139,6 @@ void dtt_worker(void *_arg)
 	}
 
 	if(status != 0)
-		//TODO: use writer thread
 		fprintf(stderr, "Error: %s: %s\n", arg->path, strerror(status));
 
 	closedir(arg->dir);
@@ -147,7 +148,7 @@ void dtt_worker(void *_arg)
 }
 
 
-int dtt_start(char *path, struct thread_pool *tp, struct map *m)
+int dtt_start(char *path, struct thread_pool *tp, struct map *m, char *out)
 {
 	struct dtt_arg *arg = malloc(sizeof(*arg) + strlen(path) + 1);
 	if(arg == NULL)
@@ -156,6 +157,7 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m)
 	//Fill in data
 	arg->tp = tp;
 	arg->m = m;
+	arg->out = out;
 	arg->dir = NULL;
 	strcpy(arg->path, path);
 

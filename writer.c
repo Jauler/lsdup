@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <errno.h>
+#include <string.h>
 
 #include "errno.h"
 #include "mpmc_lf_queue.h"
@@ -23,6 +25,12 @@ static void *w_worker(void *arg)
 	char *msg;
 
 	while(1){
+		//check if we need to pause
+		pthread_mutex_lock(&w->mutex);
+		while(w->pause)
+			pthread_cond_wait(&w->cond, &w->mutex);
+		pthread_mutex_unlock(&w->mutex);
+
 		//Try to get message
 		if((msg = MPMCQ_dequeue(w->wq)) == NULL){
 			nanosleep(&ts, NULL);
@@ -30,7 +38,7 @@ static void *w_worker(void *arg)
 		}
 
 		//print and free message
-		puts(msg);
+		fputs(msg, w->out);
 		free(msg);
 	}
 
@@ -38,12 +46,19 @@ static void *w_worker(void *arg)
 }
 
 
-struct writer *w_create(void)
+struct writer *w_create(char *filename)
 {
 	//Allocate writer data
 	struct writer *w = malloc(sizeof(*w));
 	if(w == NULL)
 		return NULL;
+
+	//open file
+	if((w->out = fopen(filename, "w")) == NULL){
+		fprintf(stderr, "Error: %s: %s\n", filename, strerror(errno));
+		free(w);
+		return NULL;
+	}
 
 	//create queue
 	w->wq = MPMCQ_create();
@@ -51,6 +66,11 @@ struct writer *w_create(void)
 		free(w);
 		return NULL;
 	}
+
+	//Init mutexes and condition for thread pausing
+	pthread_cond_init(&w->cond, NULL);
+	pthread_mutex_init(&w->mutex, NULL);
+	w->pause = 0;
 
 	//Init thread
 	if(pthread_create(&w->pthread, NULL, w_worker, w)){
@@ -60,6 +80,25 @@ struct writer *w_create(void)
 	}
 
 	return w;
+}
+
+
+void w_pause(struct writer *w)
+{
+	pthread_mutex_lock(&w->mutex);
+	w->pause = 1;
+	pthread_mutex_unlock(&w->mutex);
+	return;
+}
+
+
+void w_resume(struct writer *w)
+{
+	pthread_mutex_lock(&w->mutex);
+	w->pause = 0;
+	pthread_cond_broadcast(&w->cond);
+	pthread_mutex_unlock(&w->mutex);
+	return;
 }
 
 

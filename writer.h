@@ -18,6 +18,10 @@
 struct writer {
 	pthread_t pthread;
 	struct mpmcq *wq;
+	int pause;
+	pthread_cond_t cond;
+	pthread_mutex_t mutex;
+	FILE *out;
 };
 
 
@@ -28,18 +32,26 @@ struct writer {
  * 		inited struct writer - on success
  * 		NULL                 - on failure
  */
-struct writer *w_create(void);
+struct writer *w_create(char *filename);
+
 
 /*
- * Enqueue message to be printed
+ * Pause writer execution.
  *
  * Arguments:
- * 		w      - struct writer previously inited by w_start
- *		stream - stdout, stderr, or open FILE *
- *		msg    - message to print
+ *		tp - struct thread pool previously returned by tp_create
+ *
  */
-int w_enqueue(struct writer *w, FILE *stream, char *msg);
+void w_pause(struct writer *w);
 
+/*
+ * Resume threads execution if it was previusly pused
+ *
+ * Arguments:
+ *		tp - struct thread pool previously returned by tp_create
+ *
+ */
+void w_resume(struct writer *w);
 
 
 #endif

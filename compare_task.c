@@ -39,11 +39,12 @@ static int ct_enq_writer(struct writer *w, char *f1, char *f2)
 	//Send matching filenames to writer thread
 	int f1_len = strlen(f1);
 	int f2_len = strlen(f2);
-	char *msg = malloc(f1_len + f2_len + 2);
+	char *msg = malloc(f1_len + f2_len + 3);
 	memcpy(msg, f1, f1_len);
 	msg[f1_len] = ' ';
 	memcpy(&msg[f1_len + 1], f2, f2_len);
-	msg[f1_len + f2_len + 1] = 0;
+	msg[f1_len + f2_len + 1] = '\n';
+	msg[f1_len + f2_len + 2] = 0;
 	return MPMCQ_enqueue(w->wq, msg);
 }
 

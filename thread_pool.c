@@ -45,10 +45,12 @@ static void *thread_worker(void *arg)
 			nanosleep(&ts, NULL);
 			continue;
 		}
-		waiting = 0;
 
 		//Decrement waiting threads count
-		__atomic_sub_fetch(&tp->num_waiting_threads, 1, __ATOMIC_SEQ_CST);
+		if(waiting){
+			__atomic_sub_fetch(&tp->num_waiting_threads, 1, __ATOMIC_SEQ_CST);
+			waiting = 0;
+		}
 
 		//Execute task
 		t->task(t->arg);
@@ -84,6 +86,7 @@ struct thread_pool *tp_create(unsigned int num_threads)
 	//setup state variables
 	tp->num_threads = num_threads;
 	tp->num_waiting_threads = 0;
+	tp->num_enqueued_tasks = 0;
 
 	//Init mutex and thread for thread sleeping
 	pthread_cond_init(&tp->cond, NULL);

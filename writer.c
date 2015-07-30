@@ -113,15 +113,15 @@ int w_destroy(struct writer *w)
 	if(w->wq->elem_cnt != 0)
 		return -EEXIST;
 
+	//stop thread
+	w->stop = 1;
+	pthread_join(w->pthread, NULL);
+
 	//close file
 	fclose(w->out);
 
 	//destroy queue
 	MPMCQ_destroy(w->wq);
-
-	//stop thread
-	w->stop = 1;
-	pthread_join(w->pthread, NULL);
 
 	free(w);
 

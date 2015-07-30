@@ -153,13 +153,13 @@ int tp_destroy(struct thread_pool *tp)
 			tp->num_threads != tp->num_waiting_threads)
 		return -EEXIST;
 
-	//destroy queue
-	MPMCQ_destroy(tp->wq);
-
 	//stop thread
 	tp->stop = 1;
 	for(i = 0; i < tp->num_threads; i++)
 		pthread_join(tp->thread[i], NULL);
+
+	//destroy queue
+	MPMCQ_destroy(tp->wq);
 
 	//release thread pool
 	free(tp);

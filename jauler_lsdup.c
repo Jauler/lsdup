@@ -133,5 +133,8 @@ int main(int argc, char *argv[])
 		nanosleep(&ts, NULL);
 	}
 
+	//Destroy writer
+	w_destroy(w);
+
 	return 0;
 }

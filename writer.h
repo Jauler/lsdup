@@ -20,6 +20,7 @@ struct writer {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 	struct mpmcq *wq;
+	int stop;
 	int pause;
 	FILE *out;
 };
@@ -33,6 +34,22 @@ struct writer {
  * 		NULL                 - on failure
  */
 struct writer *w_create(char *filename);
+
+
+/*
+ * Stop writer and release its resources
+ *
+ * Note: this is not thread safe, thus calles must take care,
+ * that no new enqueues happens while this function is in affect
+ *
+ * Arguments:
+ *		w - writer previsouly returned by w_create
+ *
+ *	Return:
+ *		0       - on success
+ *		-EEXIST - if writer queue is not empty
+ */
+int w_destroy(struct writer *w);
 
 
 /*

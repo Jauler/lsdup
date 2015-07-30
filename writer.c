@@ -25,6 +25,10 @@ static void *w_worker(void *arg)
 	char *msg;
 
 	while(1){
+		//check if we need to terminate
+		if(w->stop)
+			pthread_exit(NULL);
+
 		//check if we need to pause
 		pthread_mutex_lock(&w->mutex);
 		while(w->pause)
@@ -101,4 +105,25 @@ void w_resume(struct writer *w)
 	return;
 }
 
+
+int w_destroy(struct writer *w)
+{
+	//check emptyness
+	if(w->wq->elem_cnt != 0)
+		return -EEXIST;
+
+	//close file
+	fclose(w->out);
+
+	//destroy queue
+	MPMCQ_destroy(w->wq);
+
+	//stop thread
+	w->stop = 1;
+	pthread_join(w->pthread, NULL);
+
+	free(w);
+
+	return 0;
+}
 

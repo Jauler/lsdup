@@ -10,8 +10,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 
-#include "errno.h"
 #include "mpmc_lf_queue.h"
 
 #define CAS(ptr, expected, desired) __atomic_compare_exchange(ptr, \

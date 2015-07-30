@@ -12,7 +12,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "errno.h"
 #include "thread_pool.h"
 #include "lf_map.h"
 #include "mpmc_lf_queue.h"

@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
-#include "errno.h"
 #include "lf_map.h"
 
 static const uint8_t bitReverse256[] = 

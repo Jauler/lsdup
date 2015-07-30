@@ -11,8 +11,8 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <errno.h>
 
-#include "errno.h"
 #include "mpmc_lf_queue.h"
 
 #include "writer.h"

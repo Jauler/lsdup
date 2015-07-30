@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <errno.h>
 
-#include "errno.h"
 #include "thread_pool.h"
 #include "mpmc_lf_queue.h"
 

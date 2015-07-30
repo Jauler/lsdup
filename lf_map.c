@@ -418,7 +418,7 @@ int map_rm(struct map *m, uint64_t key)
 #ifdef __x86_64__
 void map_print(struct map *m)
 {
-	int i, j;
+	int i = 0, j;
 	struct node *cur;
 
 	printf("Map:\n");

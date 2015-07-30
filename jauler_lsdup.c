@@ -19,6 +19,7 @@
 #include "dir_trav_task.h"
 #include "calc_hash_task.h"
 #include "compare_task.h"
+#include "free_map_task.h"
 #include "writer.h"
 
 #define MAX_LINE			512
@@ -132,6 +133,26 @@ int main(int argc, char *argv[])
 		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}
+
+	//Free potential matches list
+	if(fmt_start(tp, m) != 0){
+		fprintf(stderr, "Could not free data\n");
+		return -EINVAL;
+	}
+
+	//Wait for end of freeing
+	while(tp->num_enqueued_tasks != 0 ||
+			tp->num_waiting_threads != tp->num_threads ||
+			w->wq->elem_cnt != 0){
+		UI(tp, w);
+		nanosleep(&ts, NULL);
+	}
+
+	//destroy map
+	map_destroy(m);
+
+	//destroy thread pool
+	tp_destroy(tp);
 
 	//Destroy writer
 	w_destroy(w);

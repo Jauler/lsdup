@@ -115,6 +115,7 @@ CLEANUP:
 		fclose(f1);
 	if(f2 != NULL)
 		fclose(f2);
+	free(arg);
 	return;
 }
 
@@ -172,6 +173,9 @@ void ct_hash_worker(void *_arg)
 			tp_enqueueTask(arg->tp, ct_file_worker, n_arg);
 		}
 	}
+
+	//Release my arguments
+	free(arg);
 
 	return;
 }

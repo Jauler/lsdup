@@ -27,6 +27,10 @@ static void *thread_worker(void *arg)
 	int waiting = 0;
 
 	while(1){
+		//check if we need to terminate
+		if(tp->stop)
+			pthread_exit(NULL);
+
 		//check if we need to pause
 		pthread_mutex_lock(&tp->mutex);
 		while(tp->pause)
@@ -85,6 +89,7 @@ struct thread_pool *tp_create(unsigned int num_threads)
 	pthread_cond_init(&tp->cond, NULL);
 	pthread_mutex_init(&tp->mutex, NULL);
 	tp->pause = 0;
+	tp->stop = 0;
 
 	//create actual threads
 	for(i = 0; i < num_threads; i++)
@@ -134,5 +139,29 @@ void tp_resume(struct thread_pool *tp)
 	return;
 }
 
+
+int tp_destroy(struct thread_pool *tp)
+{
+	int i;
+
+	//check emptyness
+	if(tp->wq->elem_cnt != 0 ||
+			tp->num_enqueued_tasks != 0 ||
+			tp->num_threads != tp->num_waiting_threads)
+		return -EEXIST;
+
+	//destroy queue
+	MPMCQ_destroy(tp->wq);
+
+	//stop thread
+	tp->stop = 1;
+	for(i = 0; i < tp->num_threads; i++)
+		pthread_join(tp->thread[i], NULL);
+
+	//release thread pool
+	free(tp);
+
+	return 0;
+}
 
 

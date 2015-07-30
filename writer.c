@@ -22,7 +22,7 @@ static void *w_worker(void *arg)
 {
 	struct writer *w = arg;
 	struct timespec ts = {0, 1000000};
-	char *msg;
+	char *msg = NULL;
 
 	while(1){
 		//check if we need to terminate
@@ -75,6 +75,7 @@ struct writer *w_create(char *filename)
 	pthread_cond_init(&w->cond, NULL);
 	pthread_mutex_init(&w->mutex, NULL);
 	w->pause = 0;
+	w->stop = 0;
 
 	//Init thread
 	if(pthread_create(&w->pthread, NULL, w_worker, w)){

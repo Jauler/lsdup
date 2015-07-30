@@ -43,6 +43,7 @@ struct mpmcq *MPMCQ_create(void)
 	q->tail.ptr.cnt = 0;
 	q->head.ptr.ptr = node;
 	q->head.ptr.cnt = 0;
+	q->elem_cnt = 0;
 
 	return q;
 }

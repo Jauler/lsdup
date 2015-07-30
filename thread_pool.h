@@ -18,6 +18,7 @@ struct thread_pool {
 	int num_threads;
 	int num_waiting_threads;
 	int num_enqueued_tasks;
+	int stop;
 	int pause;
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
@@ -37,6 +38,21 @@ struct thread_pool {
  */
 struct thread_pool *tp_create(unsigned int num_threads);
 
+
+/*
+ * Stop thread pool and release its resources
+ *
+ * Note: this is not thread safe, thus caller must take care,
+ * that no new enqueues happens while this function is in affect
+ *
+ * Arguments:
+ *		tp - thread pool previsouly returned by tp_create
+ *
+ *	Return:
+ *		0       - on success
+ *		-EEXIST - if writer queue is not empty
+ */
+int tp_destroy(struct thread_pool *tp);
 
 
 /*

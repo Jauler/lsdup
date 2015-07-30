@@ -67,6 +67,19 @@ struct map *map_create(void);
 
 
 /*
+ * Destroy map instance
+ *
+ * NOTE: this is not thread-safe, thus caller must take care that no new
+ * adds happen during map destroy
+ *
+ * Return:
+ * 		0       - on success
+ * 		-EEXIST - if map is not empty
+ */
+int map_destroy(struct map *m);
+
+
+/*
  * Inserts an element into hash
  * NOTE: This hash does support storing multiple elements with the same key
  *

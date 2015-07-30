@@ -314,6 +314,37 @@ struct map *map_create(void)
 }
 
 
+int map_destroy(struct map *m)
+{
+	if(m->count != 0){
+		return -EEXIST;
+	}
+
+	//first of all, free all instances of linked list
+	struct node *tmp, *n = m->ST[0][0].ptr.ptr;
+	while(n != NULL){
+		tmp = n;
+		n = n->next.ptr.ptr;
+
+		free(tmp);
+	}
+
+	//then free all indirection buffers
+	int i;
+	for(i = 0; i < LF_MAP_SEGMENT_SIZE; i++){
+		if(m->ST[i] == NULL)
+			continue;
+
+		free(m->ST[i]);
+	}
+
+	//release map
+	free(m);
+
+	return 0;
+}
+
+
 int map_add(struct map *m, uint64_t key, void *data)
 {
 	int ret;

@@ -69,7 +69,12 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 	void *eq_sz_list;
 	if((eq_sz_list = map_find(arg->m, fs.st_size)) == NULL){
 		eq_sz_list = MPMCQ_create();
-		map_add(arg->m, fs.st_size, eq_sz_list);
+
+		//If adding does not succeed - it means someone else has added
+		if(map_add(arg->m, fs.st_size, eq_sz_list) != 0){
+			MPMCQ_destroy(eq_sz_list);
+			eq_sz_list = map_find(arg->m, fs.st_size);
+		}
 	}
 
 	//enqueue file

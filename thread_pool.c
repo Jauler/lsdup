@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "errno.h"
 #include "thread_pool.h"
@@ -103,8 +104,10 @@ int tp_enqueueTask(struct thread_pool *tp, void (*task)(void *), void *arg)
 {
 	int status;
 	struct task *t = malloc(sizeof(*t));
-	if(t == NULL)
+	if(t == NULL){
+		fprintf(stderr, "Out of Memory\n");
 		return -ENOMEM;
+	}
 
 	//Setup task variables
 	t->task = task;

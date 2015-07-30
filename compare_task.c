@@ -58,14 +58,14 @@ void ct_file_worker(void *_arg)
 	//Open first file
 	f1 = fopen(arg->f1->filename, "r");
 	if(f1 == NULL){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		fprintf(stderr, "Error: %s %s\n", arg->f1->filename, strerror(errno));
 		goto CLEANUP;
 	}
 
 	//open second file
 	f2 = fopen(arg->f2->filename, "r");
 	if(f2 == NULL){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		fprintf(stderr, "Error: %s %s\n", arg->f1->filename, strerror(errno));
 		goto CLEANUP;
 	}
 

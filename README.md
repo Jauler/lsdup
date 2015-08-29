@@ -5,8 +5,7 @@ A utility to list duplicate files in a given
 folder on a unix or posix system
 
 
-Dependencies and requirements
-======================================
+###Dependencies and requirements
 
 These packages are required in order to succesfully compile utility:
  * gcc (tested with gcc 4.8.4 and 5.2.0)
@@ -23,8 +22,7 @@ Also GCC needs to support these features on target platform:
  * __atomic_sub_fetch
 
 
-Build
-======================================
+###Build
 
 Assuming, that all dependencies are satified
 

@@ -23,7 +23,7 @@
 
 static char *help_text =
 "Usage: lsdup [OPTION]... [DIRECTORY]...\n"
-"List duplicate (in content) pairs of files (the current directory by default).\n"
+"List duplicate (in content) file pairs (the current directory by default).\n"
 "\n"
 "Options:\n"
 "	-t, --threads <num>         Number of threads to run\n"

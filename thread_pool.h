@@ -16,10 +16,10 @@
 struct thread_pool {
 	struct mpmcq *wq;
 	int num_threads;
-	int num_waiting_threads;
-	int num_enqueued_tasks;
-	int stop;
-	int pause;
+	volatile int num_waiting_threads;
+	volatile int num_enqueued_tasks;
+	volatile int stop;
+	volatile int pause;
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 	pthread_t thread[];

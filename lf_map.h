@@ -51,8 +51,8 @@ struct node {
 
 struct map {
 	union marked_ptr *ST[LF_MAP_SEGMENT_SIZE];
-	unsigned int count;
-	unsigned int size;
+	volatile unsigned int count;
+	volatile unsigned int size;
 };
 
 

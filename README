@@ -1,7 +1,7 @@
-jauler-lsdup
+lsdup
 ======================================
 
-A little utility to list duplicate files in a given
+A utility to list duplicate files in a given
 folder on a unix or posix system
 
 

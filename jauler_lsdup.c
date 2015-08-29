@@ -24,38 +24,6 @@
 
 
 #define MAX_LINE			512
-static void UI(struct thread_pool *tp, struct writer *w)
-{
-	struct timeval tv = {0, 0};
-	fd_set rfds;
-	char buff[MAX_LINE];
-
-	//Check if we have anything on stdin
-	FD_ZERO(&rfds);
-	FD_SET(0, &rfds);
-	if(select(1, &rfds, NULL, NULL, &tv) <= 0)
-		return;
-
-	//Read from stdin safely (without overruning buffer)
-	int size = read(0, buff, MAX_LINE - 1);
-
-	//just to be sure our string does not overrun
-	buff[size] = 0;
-
-	if(strcmp("start\n", buff) == 0){
-		tp_resume(tp);
-		w_resume(w);
-	}
-
-	if(strcmp("stop\n", buff) == 0){
-		tp_pause(tp);
-		w_pause(w);
-	}
-
-
-	return;
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -105,7 +73,6 @@ int main(int argc, char *argv[])
 
 	//Wait for end of traversing
 	while(tp->num_enqueued_tasks != 0){
-		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}
 
@@ -117,7 +84,6 @@ int main(int argc, char *argv[])
 
 	//Wait for end of hashing
 	while(tp->num_enqueued_tasks != 0){
-		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}
 
@@ -131,7 +97,6 @@ int main(int argc, char *argv[])
 	while(tp->num_enqueued_tasks != 0 ||
 			tp->num_waiting_threads != tp->num_threads ||
 			w->wq->elem_cnt != 0){
-		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}
 
@@ -145,7 +110,6 @@ int main(int argc, char *argv[])
 	while(tp->num_enqueued_tasks != 0 ||
 			tp->num_waiting_threads != tp->num_threads ||
 			w->wq->elem_cnt != 0){
-		UI(tp, w);
 		nanosleep(&ts, NULL);
 	}
 

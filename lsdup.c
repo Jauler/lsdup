@@ -21,13 +21,21 @@
 #include "compare_task.h"
 #include "free_map_task.h"
 
+static char *help_text =
+"Usage: lsdup [OPTION]... [DIRECTORY]...\n"
+"List duplicate (in content) pairs of files (the current directory by default).\n"
+"\n"
+"Options:\n"
+"	-t, --threads <num>         Number of threads to run\n"
+"	-h, --help                  Print this help text\n";
+
 struct params {
 	int thread_cnt;
 	char *scan_path;
 };
 
 
-int scan_params(int argc, char *argv[], struct params *p)
+static int scan_params(int argc, char *argv[], struct params *p)
 {
 	//Default values
 	p->thread_cnt = sysconf(_SC_NPROCESSORS_ONLN);
@@ -38,18 +46,24 @@ int scan_params(int argc, char *argv[], struct params *p)
 	extern int optind;
 	int arg;
 	int idx = 1;
-	struct option o[3] = {
-		{"t", 1, NULL, 'T'},
-		{"Threads", 1, NULL, 'T'},
+	struct option o[5] = {
+		{"t", 1, NULL, 't'},
+		{"threads", 1, NULL, 't'},
+		{"h", 0, NULL, 'h'},
+		{"help", 0, NULL, 'h'},
 		{0, 0, 0, 0}
 	};
 
 	//Scan options
 	while((arg = getopt_long_only(argc, argv, "", o, &idx)) != -1){
 		switch(arg){
-		case 'T':
+		case 't':
 			p->thread_cnt = atoi(optarg);
 			break;
+
+		case 'h':
+			printf("%s\n", help_text);
+			return -1;
 
 		case '?':
 			return -EINVAL;
@@ -78,8 +92,7 @@ int main(int argc, char *argv[])
 	//get program parameters
 	struct params p;
 	if(scan_params(argc, argv, &p) != 0){
-		fprintf(stderr, "Invalid parameters\n");
-		return -EINVAL;
+		return 0;
 	}
 
 	//Create thread pool

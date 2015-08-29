@@ -27,9 +27,13 @@ Also GCC needs to support these features on target platform:
 Assuming, that all dependencies are satified
 
 To build a binary:
+```
 $ make
+```
 
 To cleanup:
+```
 $ make clean
+```
 
 

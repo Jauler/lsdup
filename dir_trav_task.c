@@ -26,6 +26,7 @@ struct dtt_arg {
 	struct thread_pool *tp;
 	struct map *m;
 	DIR *dir;
+	int recursive;
 	char path[];
 };
 
@@ -85,6 +86,9 @@ static void dtt_handle_file(struct dtt_arg *arg, struct dirent *f)
 
 static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 {
+	if(!arg->recursive)
+		return;
+
 	struct dtt_arg *n_arg;
 
 	//allocate buffer for new taskarg. Also include string sizes
@@ -95,6 +99,7 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 	//fill in taskarg struct
 	n_arg->tp = arg->tp;
 	n_arg->m = arg->m;
+	n_arg->recursive = arg->recursive;
 	n_arg->dir = NULL;
 	strcpy(n_arg->path, arg->path);
 	if(arg->path[strlen(arg->path) - 1] != '/')
@@ -151,7 +156,7 @@ void dtt_worker(void *_arg)
 }
 
 
-int dtt_start(char *path, struct thread_pool *tp, struct map *m)
+int dtt_start(char *path, struct thread_pool *tp, struct map *m, int recursive)
 {
 	struct dtt_arg *arg = malloc(sizeof(*arg) + strlen(path) + 1);
 	if(arg == NULL)
@@ -160,6 +165,7 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m)
 	//Fill in data
 	arg->tp = tp;
 	arg->m = m;
+	arg->recursive = recursive;
 	arg->dir = NULL;
 	strcpy(arg->path, path);
 

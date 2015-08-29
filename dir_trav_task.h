@@ -21,15 +21,16 @@
  * *map with key value equal to file size
  *
  * Arguments:
- *		path - path to start traversing
- *		tp   - thread pool for concurrency handling
- *		m    - map to add files to
+ *		path      - path to start traversing
+ *		tp        - thread pool for concurrency handling
+ *		m         - map to add files to
+ *		recursive - if scan should be recursive supply 1 here, otherwise 0
  *
  * Return:
  *		0                   - on success
  *		negative error code - on failure
  */
-int dtt_start(char *path, struct thread_pool *tp, struct map *m);
+int dtt_start(char *path, struct thread_pool *tp, struct map *m, int recursive);
 
 
 #endif

@@ -27,10 +27,12 @@ static char *help_text =
 "\n"
 "Options:\n"
 "	-t, --threads <num>         Number of threads to run\n"
+"	-r, --recursive             Scan directory recursively\n"
 "	-h, --help                  Print this help text\n";
 
 struct params {
 	int thread_cnt;
+	int recursive;
 	char *scan_path;
 };
 
@@ -40,15 +42,19 @@ static int scan_params(int argc, char *argv[], struct params *p)
 	//Default values
 	p->thread_cnt = sysconf(_SC_NPROCESSORS_ONLN);
 	p->scan_path = ".";
+	p->recursive = 0;
 
 	//Prepare for getopt
 	extern char *optarg;
 	extern int optind;
 	int arg;
 	int idx = 1;
-	struct option o[5] = {
+	struct option o[] = {
 		{"t", 1, NULL, 't'},
 		{"threads", 1, NULL, 't'},
+		{"r", 0, NULL, 'r'},
+		{"R", 0, NULL, 'r'},
+		{"recursive", 0, NULL, 'r'},
 		{"h", 0, NULL, 'h'},
 		{"help", 0, NULL, 'h'},
 		{0, 0, 0, 0}
@@ -60,6 +66,11 @@ static int scan_params(int argc, char *argv[], struct params *p)
 		case 't':
 			p->thread_cnt = atoi(optarg);
 			break;
+
+		case 'r':
+			p->recursive = 1;
+			break;
+
 
 		case 'h':
 			printf("%s\n", help_text);
@@ -110,7 +121,7 @@ int main(int argc, char *argv[])
 	}
 
 	//Traverse directory
-	if(dtt_start(p.scan_path, tp, m) != 0){
+	if(dtt_start(p.scan_path, tp, m, p.recursive) != 0){
 		fprintf(stderr, "Could not traverse directory\n");
 		return -EINVAL;
 	}

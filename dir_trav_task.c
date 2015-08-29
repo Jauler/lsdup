@@ -25,7 +25,6 @@
 struct dtt_arg {
 	struct thread_pool *tp;
 	struct map *m;
-	char *out;
 	DIR *dir;
 	char path[];
 };
@@ -96,7 +95,6 @@ static void dtt_handle_dir(struct dtt_arg *arg, struct dirent *d)
 	//fill in taskarg struct
 	n_arg->tp = arg->tp;
 	n_arg->m = arg->m;
-	n_arg->out = arg->out;
 	n_arg->dir = NULL;
 	strcpy(n_arg->path, arg->path);
 	if(arg->path[strlen(arg->path) - 1] != '/')
@@ -133,9 +131,6 @@ void dtt_worker(void *_arg)
 			continue;
 		if(strcmp("..", d->d_name) == 0)
 			continue;
-		if(strcmp(arg->out, d->d_name) == 0)
-			continue;
-
 
 		//Handle new directory
 		if(d->d_type == DT_DIR)
@@ -156,7 +151,7 @@ void dtt_worker(void *_arg)
 }
 
 
-int dtt_start(char *path, struct thread_pool *tp, struct map *m, char *out)
+int dtt_start(char *path, struct thread_pool *tp, struct map *m)
 {
 	struct dtt_arg *arg = malloc(sizeof(*arg) + strlen(path) + 1);
 	if(arg == NULL)
@@ -165,7 +160,6 @@ int dtt_start(char *path, struct thread_pool *tp, struct map *m, char *out)
 	//Fill in data
 	arg->tp = tp;
 	arg->m = m;
-	arg->out = out;
 	arg->dir = NULL;
 	strcpy(arg->path, path);
 

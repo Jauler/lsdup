@@ -11,7 +11,6 @@
 
 #include "thread_pool.h"
 #include "lf_map.h"
-#include "writer.h"
 
 
 /*
@@ -20,14 +19,13 @@
  * Arguments:
  *		tp - thread pool for task execution
  *		m  - map of potential matches
- *		wq - writer printing queue
  *
  * Return:
  *		0                   - on success
  *		negative error code - on failure
  *
  */
-int ct_start(struct thread_pool *tp, struct map *m, struct writer *w);
+int ct_start(struct thread_pool *tp, struct map *m);
 
 
 #endif

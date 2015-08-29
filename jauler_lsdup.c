@@ -20,34 +20,24 @@
 #include "calc_hash_task.h"
 #include "compare_task.h"
 #include "free_map_task.h"
-#include "writer.h"
 
 
-#define MAX_LINE			512
 
 int main(int argc, char *argv[])
 {
 	struct timespec ts = {0, 1000000};
 
 	//parse user args
-	if(argc != 4){
-		fprintf(stderr, "Usage: %s <scan directory> <output filename> "
+	if(argc != 3){
+		fprintf(stderr, "Usage: %s <scan directory> "
 									"<number of search threads>\n", argv[0]);
 		return 0;
 	}
 	char *dir = argv[1];
-	char *out = argv[2];
-	int cnt = atoi(argv[3]);
+	int cnt = atoi(argv[2]);
 	if(cnt <= 0 || cnt >= 100){
 		fprintf(stderr, "Supported thread count is between 1 and 99 inclusive\n");
 		return 0;
-	}
-
-	//create writer
-	struct writer *w = w_create(out);
-	if(w == NULL){
-		fprintf(stderr, "Could not create writer\n");
-		return -ENOMEM;
 	}
 
 	//Create thread pool
@@ -66,7 +56,7 @@ int main(int argc, char *argv[])
 
 	//Traverse directory
 	char *path = argc < 2 ? "." : dir;
-	if(dtt_start(path, tp, m, out) != 0){
+	if(dtt_start(path, tp, m) != 0){
 		fprintf(stderr, "Could not traverse directory\n");
 		return -EINVAL;
 	}
@@ -88,15 +78,14 @@ int main(int argc, char *argv[])
 	}
 
 	//Calculate hashes of potential matches
-	if(ct_start(tp, m, w) != 0){
+	if(ct_start(tp, m) != 0){
 		fprintf(stderr, "Could not calculate hashes\n");
 		return -EINVAL;
 	}
 
 	//Wait for end of comparing
 	while(tp->num_enqueued_tasks != 0 ||
-			tp->num_waiting_threads != tp->num_threads ||
-			w->wq->elem_cnt != 0){
+			tp->num_waiting_threads != tp->num_threads){
 		nanosleep(&ts, NULL);
 	}
 
@@ -108,8 +97,7 @@ int main(int argc, char *argv[])
 
 	//Wait for end of freeing
 	while(tp->num_enqueued_tasks != 0 ||
-			tp->num_waiting_threads != tp->num_threads ||
-			w->wq->elem_cnt != 0){
+			tp->num_waiting_threads != tp->num_threads){
 		nanosleep(&ts, NULL);
 	}
 
@@ -118,9 +106,6 @@ int main(int argc, char *argv[])
 
 	//destroy thread pool
 	tp_destroy(tp);
-
-	//Destroy writer
-	w_destroy(w);
 
 	return 0;
 }

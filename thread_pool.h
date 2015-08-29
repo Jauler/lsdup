@@ -50,7 +50,6 @@ struct thread_pool *tp_create(unsigned int num_threads);
  *
  *	Return:
  *		0       - on success
- *		-EEXIST - if writer queue is not empty
  */
 int tp_destroy(struct thread_pool *tp);
 

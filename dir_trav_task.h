@@ -24,13 +24,12 @@
  *		path - path to start traversing
  *		tp   - thread pool for concurrency handling
  *		m    - map to add files to
- *		out  - filename of output file (this file will be ignored)
  *
  * Return:
  *		0                   - on success
  *		negative error code - on failure
  */
-int dtt_start(char *path, struct thread_pool *tp, struct map *m, char *out);
+int dtt_start(char *path, struct thread_pool *tp, struct map *m);
 
 
 #endif

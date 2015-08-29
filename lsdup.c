@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <time.h>
 #include <string.h>
-#include <sys/select.h>
 #include <errno.h>
 
 #include "thread_pool.h"
@@ -21,27 +21,69 @@
 #include "compare_task.h"
 #include "free_map_task.h"
 
+struct params {
+	int thread_cnt;
+	char *scan_path;
+};
+
+
+int scan_params(int argc, char *argv[], struct params *p)
+{
+	//Default values
+	p->thread_cnt = sysconf(_SC_NPROCESSORS_ONLN);
+	p->scan_path = ".";
+
+	//Prepare for getopt
+	extern char *optarg;
+	extern int optind;
+	int arg;
+	int idx = 1;
+	struct option o[3] = {
+		{"t", 1, NULL, 'T'},
+		{"Threads", 1, NULL, 'T'},
+		{0, 0, 0, 0}
+	};
+
+	//Scan options
+	while((arg = getopt_long_only(argc, argv, "", o, &idx)) != -1){
+		switch(arg){
+		case 'T':
+			p->thread_cnt = atoi(optarg);
+			break;
+
+		case '?':
+			return -EINVAL;
+		}
+	}
+
+	//Check if parameters is valid
+	if(p->thread_cnt <= 0 || p->thread_cnt >= 100){
+		fprintf(stderr, "Invalid thread count. "
+				"It must be a number between 1 and 100 inclusive\n");
+		return -EINVAL;
+	}
+
+	//Check if path is specified as last argument
+	if(optind < argc)
+		p->scan_path = argv[argc - 1];
+
+	return 0;
+}
 
 
 int main(int argc, char *argv[])
 {
 	struct timespec ts = {0, 1000000};
 
-	//parse user args
-	if(argc != 3){
-		fprintf(stderr, "Usage: %s <scan directory> "
-									"<number of search threads>\n", argv[0]);
-		return 0;
-	}
-	char *dir = argv[1];
-	int cnt = atoi(argv[2]);
-	if(cnt <= 0 || cnt >= 100){
-		fprintf(stderr, "Supported thread count is between 1 and 99 inclusive\n");
-		return 0;
+	//get program parameters
+	struct params p;
+	if(scan_params(argc, argv, &p) != 0){
+		fprintf(stderr, "Invalid parameters\n");
+		return -EINVAL;
 	}
 
 	//Create thread pool
-	struct thread_pool *tp = tp_create(cnt);
+	struct thread_pool *tp = tp_create(p.thread_cnt);
 	if(tp == NULL){
 		fprintf(stderr, "Could not create thread pool\n");
 		return -ENOMEM;
@@ -55,8 +97,7 @@ int main(int argc, char *argv[])
 	}
 
 	//Traverse directory
-	char *path = argc < 2 ? "." : dir;
-	if(dtt_start(path, tp, m) != 0){
+	if(dtt_start(p.scan_path, tp, m) != 0){
 		fprintf(stderr, "Could not traverse directory\n");
 		return -EINVAL;
 	}

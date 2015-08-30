@@ -37,3 +37,17 @@ $ make clean
 ```
 
 
+###Usage
+
+```
+Usage: lsdup [OPTION]... [DIRECTORY]...
+List duplicate (in content) file pairs (the current directory by default).
+
+Options:
+	-t, --threads <num>   Number of threads to run
+	-r, --recursive       Scan directory recursively
+	-h, --help            Print this help text
+```
+
+
+
